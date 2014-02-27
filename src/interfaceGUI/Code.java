@@ -215,7 +215,7 @@ public class Code {
 	}
 	
 		
-	// COM PORT STUFF
+	// COM CONNECTION STUFF
 	
 	public void resetConnection(){
 		writeToLog("Connected with " + connectedPort);

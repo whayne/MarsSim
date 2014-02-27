@@ -31,6 +31,7 @@ public class WrapperForm extends JFrame {
 			}
 		});
 	}
+	
 
 	/**
 	 * Create the frame.
