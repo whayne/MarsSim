@@ -35,6 +35,7 @@ public class WrapperForm extends JFrame {
 	 * Create the frame.
 	 */
 	public WrapperForm() {
+		setTitle("Rover Systems Simulator");
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowOpened(WindowEvent arg0) {
@@ -42,7 +43,7 @@ public class WrapperForm extends JFrame {
 			}
 		});
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 602, 430);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPane.setLayout(new BorderLayout(0, 0));

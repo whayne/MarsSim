@@ -64,6 +64,9 @@ public class Code {
 	String[][] actionTips = new String[2][30];
 	String[][] actionIcons = new String[2][30];
 	
+	
+	// SETUP
+	
 	static void align(){
 		GUI = Form.frame;
 	}
@@ -188,6 +191,32 @@ public class Code {
 		}
 	}
 	
+	public void pingRover(){
+		GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Pinging Rover...\n");
+		writeToSerial("s g ^", true);
+		listenForSignal("g ^", new Runnable(){
+			public void run(){
+				writeToLog("Ping to Rover shows Connected.");
+				Connected = true;
+				GUI.ConnectionLbl.setText("Connected for 0 min.");
+				GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Rover Connected: " + DateTime.toString("hh:mm:ss") + "\n");
+				(new PopUp()).showConfirmDialog("Rover connected.", "Ping Confirm", PopUp.DEFAULT_OPTIONS);
+			}
+		}, new Runnable(){
+			public void run(){
+				writeToLog("No Rover response to Ping.");
+				Connected = false;
+				GUI.ConnectionLbl.setText("Not Connected.");
+				GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Rover did not respond.\n");
+				(new PopUp()).showConfirmDialog("No Rover found.", "Ping Failed", PopUp.DEFAULT_OPTIONS);
+			}
+		}, 
+		10);
+	}
+	
+		
+	// COM PORT STUFF
+	
 	public void resetConnection(){
 		writeToLog("Connected with " + connectedPort);
 		boolean portFound = false;
@@ -278,6 +307,128 @@ public class Code {
 		resetConnection();
 	}
 
+	public void writeToSerial(String msg){
+		if (Connected && !muted){
+			writeToLog("Command sent: \'" + msg + "\'" + DateTime.toString());
+			try {
+            	outputStream.write(msg.getBytes());
+        	} catch (Exception e) {
+        		GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Message Failed" + "\n");
+        		pingRover();
+        	}
+		}
+	}
+	
+	public void writeToSerial(String msg, boolean override){
+		if ((Connected || override) && !muted){
+			writeToLog("Command sent: \'" + msg + "\'" + DateTime.toString());
+			try {
+            	outputStream.write(msg.getBytes());
+        	} catch (Exception e) {
+        		GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Message Failed" + "\n");
+        		pingRover();
+        	}
+		}
+	}
+	
+	public void updateSerialCom(){
+		if (!receivingPhoto){
+			char[] input = readFromSerial().toCharArray();
+			if (input.length > 0){
+				if (input[0] == 'g'){
+					if (input[2] == 'n'){
+						String data = "";
+						int x = 4;
+						while (x < input.length){
+							data += input[x];
+							x++;
+						}
+						GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Recieved: " + data + "\n");
+						writeToLog("Recieved Note: " + data);
+					}
+					else if (input[2] == 'i'){
+						receivingPhoto = true;
+						int filelength = Integer.parseInt(buildString(input, 4, input.length - 1));
+						if (filelength < 0){
+							filelength += 65536;
+						}
+						ReadPhoto(filelength);
+					}
+					else if (input[2] == '}'){
+						muted = true;
+						GUI.MuteIcon.setVisible(true);
+					}
+					else if (input[2] == '{'){
+						muted = false;
+						GUI.MuteIcon.setVisible(false);
+					}
+				}
+				else {
+					if (input.equals("Data Could Not be Parsed\n".toCharArray())){
+						GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Data Could Not be Parsed\n");
+					}
+				}
+			}
+		}
+	}
+	
+	private String readFromSerial(){
+		if (!connectedPort.equals("")){
+			try {
+				if (inputStream.available() > 0){
+					// System.out.println("Available");
+					Thread.sleep(20);
+					String out = "";
+					while(inputStream.available() > 0) {
+						out += (char)(inputStream.read());
+					}
+					if (listening){
+						if (out.equals(listenFor)){
+							new ThreadTimer(0, listenAction, 1);
+						}
+					}
+					return out;
+				}
+				else {
+					return "";
+				}
+			}	
+			catch(Exception exe) {
+				if (connectedPort.equals("")){
+					return "";
+				}
+				else {
+					return "Data Could Not be Parsed\n";
+				}
+			}
+		}
+		else {
+			return "";
+		}
+	}
+	
+	private void listenForSignal(String msg, final Runnable passaction, final Runnable failaction, int secs){
+		listening = true;
+		listenFor = msg;
+		listenAction = new Runnable(){
+			public void run(){
+				listenTimer.interrupt();
+				listening = false;
+				passaction.run();
+			}
+		};
+		listenFail = new Runnable(){
+			public void run(){
+				listening = false;
+				failaction.run();
+			}
+		};
+		listenTimer = new ThreadTimer(secs*1000, listenFail, 1);
+	}
+	
+	
+	// ACTION BUTTONS
+	
 	public void ActionButtonClicked(int section, int which){
 		if (editingRover){
 			if (section == 0){
@@ -400,6 +551,42 @@ public class Code {
 			(new PopUp()).showConfirmDialog("You must enter a message into the field.", "Message Failed", PopUp.DEFAULT_OPTIONS);
 		}
 	}
+	
+	private void UpdateActionBtns(){
+		int x = 0;
+		while (x < GUI.RoverBtns.length){
+			if (!actionCommands[0][x].equals("")){
+				GUI.RoverBtns[x].setToolTipText(actionTips[0][x]);
+			}
+			else {
+				GUI.RoverBtns[x].setToolTipText("Unassigned");
+			}
+			if (!actionCommands[1][x].equals("")){
+				GUI.SatBtns[x].setToolTipText(actionTips[1][x]);
+			}
+			else {
+				GUI.SatBtns[x].setToolTipText("Unassigned");
+			}
+			try {
+				GUI.RoverBtns[x].setImage(new ImageIcon(Form.class.getResource("/" + actionIcons[0][x])));
+			}
+			catch (Exception e) {
+				GUI.RoverBtns[x].setImage(null);
+			}
+			GUI.RoverBtns[x].setEnabled(!actionCommands[0][x].equals(""));
+			try {
+				GUI.SatBtns[x].setImage(new ImageIcon(Form.class.getResource("/" + actionIcons[1][x])));
+			}
+			catch (Exception e){
+				GUI.SatBtns[x].setImage(null);
+			}
+			GUI.SatBtns[x].setEnabled(!actionCommands[1][x].equals(""));
+			x++;
+		}
+	}
+	
+	
+	// ACTION BUTTON EDITING
 	
 	public void addRoverBtn(){
 		new ThreadTimer(0, new Runnable(){
@@ -630,28 +817,8 @@ public class Code {
 		}
 	}
 
-	public void pingRover(){
-		GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Pinging Rover...\n");
-		writeToSerial("s g ^", true);
-		listenForSignal("g ^", new Runnable(){
-			public void run(){
-				writeToLog("Ping to Rover shows Connected.");
-				Connected = true;
-				GUI.ConnectionLbl.setText("Connected for 0 min.");
-				GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Rover Connected: " + DateTime.toString("hh:mm:ss") + "\n");
-				(new PopUp()).showConfirmDialog("Rover connected.", "Ping Confirm", PopUp.DEFAULT_OPTIONS);
-			}
-		}, new Runnable(){
-			public void run(){
-				writeToLog("No Rover response to Ping.");
-				Connected = false;
-				GUI.ConnectionLbl.setText("Not Connected.");
-				GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Rover did not respond.\n");
-				(new PopUp()).showConfirmDialog("No Rover found.", "Ping Failed", PopUp.DEFAULT_OPTIONS);
-			}
-		}, 
-		10);
-	}
+	
+	// FILE COMMUNICATION
 	
 	private void ReadPhoto(int length){
 		if (receivingPhoto){
@@ -785,58 +952,9 @@ public class Code {
 		}
 		return out;
 	}
-		
-	private void listenForSignal(String msg, final Runnable passaction, final Runnable failaction, int secs){
-		listening = true;
-		listenFor = msg;
-		listenAction = new Runnable(){
-			public void run(){
-				listenTimer.interrupt();
-				listening = false;
-				passaction.run();
-			}
-		};
-		listenFail = new Runnable(){
-			public void run(){
-				listening = false;
-				failaction.run();
-			}
-		};
-		listenTimer = new ThreadTimer(secs*1000, listenFail, 1);
-	}
-		
-	private void UpdateActionBtns(){
-		int x = 0;
-		while (x < GUI.RoverBtns.length){
-			if (!actionCommands[0][x].equals("")){
-				GUI.RoverBtns[x].setToolTipText(actionTips[0][x]);
-			}
-			else {
-				GUI.RoverBtns[x].setToolTipText("Unassigned");
-			}
-			if (!actionCommands[1][x].equals("")){
-				GUI.SatBtns[x].setToolTipText(actionTips[1][x]);
-			}
-			else {
-				GUI.SatBtns[x].setToolTipText("Unassigned");
-			}
-			try {
-				GUI.RoverBtns[x].setImage(new ImageIcon(Form.class.getResource("/" + actionIcons[0][x])));
-			}
-			catch (Exception e) {
-				GUI.RoverBtns[x].setImage(null);
-			}
-			GUI.RoverBtns[x].setEnabled(!actionCommands[0][x].equals(""));
-			try {
-				GUI.SatBtns[x].setImage(new ImageIcon(Form.class.getResource("/" + actionIcons[1][x])));
-			}
-			catch (Exception e){
-				GUI.SatBtns[x].setImage(null);
-			}
-			GUI.SatBtns[x].setEnabled(!actionCommands[1][x].equals(""));
-			x++;
-		}
-	}
+	
+	
+	// FILE STUFF
 	
 	private void SaveProgrammer(){
 		String filename = "CommandString.dll";
@@ -859,106 +977,6 @@ public class Code {
 		}
 	}
 	
-	public void writeToSerial(String msg){
-		if (Connected && !muted){
-			writeToLog("Command sent: \'" + msg + "\'" + DateTime.toString());
-			try {
-            	outputStream.write(msg.getBytes());
-        	} catch (Exception e) {
-        		GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Message Failed" + "\n");
-        		pingRover();
-        	}
-		}
-	}
-	
-	public void writeToSerial(String msg, boolean override){
-		if ((Connected || override) && !muted){
-			writeToLog("Command sent: \'" + msg + "\'" + DateTime.toString());
-			try {
-            	outputStream.write(msg.getBytes());
-        	} catch (Exception e) {
-        		GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Message Failed" + "\n");
-        		pingRover();
-        	}
-		}
-	}
-	
-	public void updateSerialCom(){
-		if (!receivingPhoto){
-			char[] input = readFromSerial().toCharArray();
-			if (input.length > 0){
-				if (input[0] == 'g'){
-					if (input[2] == 'n'){
-						String data = "";
-						int x = 4;
-						while (x < input.length){
-							data += input[x];
-							x++;
-						}
-						GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Recieved: " + data + "\n");
-						writeToLog("Recieved Note: " + data);
-					}
-					else if (input[2] == 'i'){
-						receivingPhoto = true;
-						int filelength = Integer.parseInt(buildString(input, 4, input.length - 1));
-						if (filelength < 0){
-							filelength += 65536;
-						}
-						ReadPhoto(filelength);
-					}
-					else if (input[2] == '}'){
-						muted = true;
-						GUI.MuteIcon.setVisible(true);
-					}
-					else if (input[2] == '{'){
-						muted = false;
-						GUI.MuteIcon.setVisible(false);
-					}
-				}
-				else {
-					if (input.equals("Data Could Not be Parsed\n".toCharArray())){
-						GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Data Could Not be Parsed\n");
-					}
-				}
-			}
-		}
-	}
-	
-	private String readFromSerial(){
-		if (!connectedPort.equals("")){
-			try {
-				if (inputStream.available() > 0){
-					// System.out.println("Available");
-					Thread.sleep(20);
-					String out = "";
-					while(inputStream.available() > 0) {
-						out += (char)(inputStream.read());
-					}
-					if (listening){
-						if (out.equals(listenFor)){
-							new ThreadTimer(0, listenAction, 1);
-						}
-					}
-					return out;
-				}
-				else {
-					return "";
-				}
-			}	
-			catch(Exception exe) {
-				if (connectedPort.equals("")){
-					return "";
-				}
-				else {
-					return "Data Could Not be Parsed\n";
-				}
-			}
-		}
-		else {
-			return "";
-		}
-	}
-	
 	public void writeToLog(String what){
 		try {
 			LogFile.write(what + "\t\t" + DateTime.toString());
@@ -968,6 +986,9 @@ public class Code {
 			HandleError(e);
 		}
 	}
+	
+	
+	// SUPPORTING METHODS
 	
 	private String buildString(char[] array, int start, int end){
 		String out = "";
