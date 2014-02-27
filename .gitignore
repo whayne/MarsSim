@@ -1,3 +1,4 @@
 # stuff to ignore
 .classpath
+.project
 bin/*
