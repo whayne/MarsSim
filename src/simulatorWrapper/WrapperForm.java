@@ -8,6 +8,7 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.Toolkit;
 
 public class WrapperForm extends JFrame {
 
@@ -35,6 +36,7 @@ public class WrapperForm extends JFrame {
 	 * Create the frame.
 	 */
 	public WrapperForm() {
+		setIconImage(Toolkit.getDefaultToolkit().getImage(WrapperForm.class.getResource("/System Icon.png")));
 		setTitle("Rover Systems Simulator");
 		addWindowListener(new WindowAdapter() {
 			@Override

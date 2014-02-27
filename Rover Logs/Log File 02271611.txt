@@ -1,0 +1,6 @@
+Connection Opened with COM13 on 02-27-2014 at 16:11:54
+
+Connected with COM13				[16:11:54]
+COM13 failed to resond				[16:11:54]
+
+Communication Closed				[16:11:54]
