@@ -1,8 +1,8 @@
 package interfaceGUI;
 
-public class Events {
+public class InterfaceEvents {
 
-	static Code CODE = new Code();
+	static InterfaceCode CODE = new InterfaceCode();
 	
 	static void COMPortChanged(){
 		CODE.changeCOMPort();
@@ -17,7 +17,7 @@ public class Events {
 	}
 	
 	static void addNoteToLog(String note){
-		CODE.writeToLog(note);
+		// CODE.writeToLog(note);
 	}
 	
 	static void sendMsg(String msg){

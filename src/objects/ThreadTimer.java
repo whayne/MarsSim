@@ -1,4 +1,4 @@
-package interfaceGUI;
+package objects;
 
 public class ThreadTimer extends Thread {
 

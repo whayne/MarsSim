@@ -27,7 +27,7 @@ public class PopUp extends JDialog {
 	
 	public PopUp(){
 		this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-		this.setAlwaysOnTop(true);
+		// this.setAlwaysOnTop(true);
 		this.setResizable(false);
 		this.getContentPane().setLayout(null);
 		initalize();

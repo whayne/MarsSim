@@ -25,9 +25,9 @@ import java.beans.PropertyChangeEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.AdjustmentEvent;
 
-public class Form extends JFrame {
+public class InterfaceForm extends JFrame {
 
-	static Form frame;
+	static InterfaceForm frame;
 	private JPanel contentPane;
 	private Point FrameLocation = new Point(0, 0);
 	
@@ -67,12 +67,13 @@ public class Form extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					frame = new Form();
-					Code.align();
+					frame = new InterfaceForm();
+					InterfaceCode.align();
 					//frame.setUndecorated(true);
 					Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 					screenSize = new Dimension((int)(screenSize.getWidth() * 0.8), (int)(screenSize.getHeight() * 0.8));
 					frame.setSize(screenSize);
+					frame.setLocation(0, 0);
 				    frame.setVisible(true);
 				    frame.setResizable(false);
 				    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -83,7 +84,7 @@ public class Form extends JFrame {
 		});
 	}
 
-	public Form() {
+	public InterfaceForm() {
 		addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentMoved(ComponentEvent arg0) {
@@ -93,16 +94,16 @@ public class Form extends JFrame {
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent arg0) {
-				Events.windowClosing();
+				InterfaceEvents.windowClosing();
 			}
 			@Override
 			public void windowOpened(WindowEvent arg0) {
-				Events.CODE.initalize();
-				Events.CODE.resetConnection();
+				InterfaceEvents.CODE.initalize();
+				InterfaceEvents.CODE.resetConnection();
 			}
 		});
-		setIconImage(Toolkit.getDefaultToolkit().getImage(Form.class.getResource("/Satelite.png")));
-		setTitle("Rover Control");
+		setIconImage(Toolkit.getDefaultToolkit().getImage(InterfaceForm.class.getResource("/Dish.png")));
+		setTitle("Mock Ground");
 		initalize();
 	}
 	
@@ -129,33 +130,33 @@ public class Form extends JFrame {
 		LinkBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				Events.CODE.resetConnection();
+				InterfaceEvents.CODE.resetConnection();
 			}
 		});
-		LinkBtn.setIcon(new ImageIcon(Form.class.getResource("/Earth_Up.png")));
+		LinkBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Earth_Up.png")));
 		ProgramBtnsPnl.add(LinkBtn);
 		
 		MailBtn = new ImageButton();
 		MailBtn.setBounds(140, 20, 55, 55);
-		MailBtn.setIcon(new ImageIcon(Form.class.getResource("/Mail.png")));
+		MailBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Mail.png")));
 		MailBtn.setToolTipText("View Data");
 		MailBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				Events.CODE.OpenRecievedFiles();
+				InterfaceEvents.CODE.OpenRecievedFiles();
 			}
 		});
 		ProgramBtnsPnl.add(MailBtn);
 		
 		MessageBtn = new ImageButton();
 		MessageBtn.setBounds(400, 20, 55, 55);
-		MessageBtn.setIcon(new ImageIcon(Form.class.getResource("/Comment_Up.png")));
+		MessageBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Comment_Up.png")));
 		MessageBtn.setToolTipText("Send Command");
 		MessageBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
 				if (!MessageBtn.getText().equals("")){
-					Events.sendMsg(JOptionPane.showInputDialog(frame, "Enter a Command:", "Write to Serial", JOptionPane.DEFAULT_OPTION));
+					InterfaceEvents.sendMsg(JOptionPane.showInputDialog(frame, "Enter a Command:", "Write to Serial", JOptionPane.DEFAULT_OPTION));
 				}
 			}
 		});
@@ -163,18 +164,18 @@ public class Form extends JFrame {
 		
 		CommentBtn = new ImageButton();
 		CommentBtn.setBounds(270, 20, 55, 55);
-		CommentBtn.setIcon(new ImageIcon(Form.class.getResource("/New_Post.png")));
+		CommentBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/New_Post.png")));
 		CommentBtn.setToolTipText("Note on Log");
 		CommentBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				Events.addNoteToLog(JOptionPane.showInputDialog(frame, "Note for log:", "Data Log Edit", JOptionPane.DEFAULT_OPTION));
+				InterfaceEvents.addNoteToLog(JOptionPane.showInputDialog(frame, "Note for log:", "Data Log Edit", JOptionPane.DEFAULT_OPTION));
 			}
 		});
 		ProgramBtnsPnl.add(CommentBtn);
 		
 		OptionsBtn = new ImageButton();
-		OptionsBtn.setIcon(new ImageIcon(Form.class.getResource("/Gear.png")));
+		OptionsBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Gear.png")));
 		OptionsBtn.setToolTipText("View Activity Log");
 		OptionsBtn.setBounds(335, 20, 55, 55);
 		OptionsBtn.addMouseListener(new MouseAdapter() {
@@ -186,7 +187,7 @@ public class Form extends JFrame {
 		ProgramBtnsPnl.add(OptionsBtn);
 		
 		FolderBtn = new ImageButton();
-		FolderBtn.setIcon(new ImageIcon(Form.class.getResource("/Folder.png")));
+		FolderBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Folder.png")));
 		FolderBtn.setToolTipText("View Files");
 		FolderBtn.setBounds(205, 20, 55, 55);
 		FolderBtn.addMouseListener(new MouseAdapter() {
@@ -195,7 +196,7 @@ public class Form extends JFrame {
 				try {
 					Desktop.getDesktop().open(new File("").getAbsoluteFile());
 				} catch (IOException e) {
-					Events.CODE.HandleError(e);
+					InterfaceEvents.CODE.HandleError(e);
 				}
 			}
 		});
@@ -209,7 +210,7 @@ public class Form extends JFrame {
 		PortSelectCombo.setBounds(570, 20, 85, 20);
 		PortSelectCombo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				Events.COMPortChanged();
+				InterfaceEvents.COMPortChanged();
 			}
 		});
 		ProgramBtnsPnl.add(PortSelectCombo);
@@ -231,15 +232,15 @@ public class Form extends JFrame {
 		PingBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				Events.CODE.pingRover();
+				InterfaceEvents.CODE.pingRover();
 			}
 		});
-		PingBtn.setIcon(new ImageIcon(Form.class.getResource("/Wi-Fi.png")));
+		PingBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Wi-Fi.png")));
 		PingBtn.setToolTipText("Ping Rover");
 		PingBtn.setBounds(75, 20, 55, 55);
 		ProgramBtnsPnl.add(PingBtn);
 		
-		MuteIcon = new JLabel(new ImageIcon(Form.class.getResource("/Mute.png")));
+		MuteIcon = new JLabel(new ImageIcon(InterfaceForm.class.getResource("/Mute.png")));
 		MuteIcon.setToolTipText("Cannot Send Messages");
 		MuteIcon.setVisible(false);
 		MuteIcon.setBounds(477, 51, 24, 24);
@@ -272,7 +273,7 @@ public class Form extends JFrame {
 			@Override
 			public void keyPressed(KeyEvent arg0) {
 				if (arg0.getKeyCode() == 10){
-					Events.sendRoverMsg();
+					InterfaceEvents.sendRoverMsg();
 				}
 			}
 		});
@@ -284,7 +285,7 @@ public class Form extends JFrame {
 		RoverSendBtn = new JButton("Send");
 		RoverSendBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				Events.sendRoverMsg();
+				InterfaceEvents.sendRoverMsg();
 			}
 		});
 		RoverSendBtn.setOpaque(false);
@@ -296,7 +297,7 @@ public class Form extends JFrame {
 		RoverDeleteLink.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				Events.roverLinkClicked(2);
+				InterfaceEvents.roverLinkClicked(2);
 			}
 		});
 		RoverDeleteLink.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -309,7 +310,7 @@ public class Form extends JFrame {
 		RoverEditLink.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				Events.roverLinkClicked(1);
+				InterfaceEvents.roverLinkClicked(1);
 			}
 		});
 		RoverEditLink.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -322,7 +323,7 @@ public class Form extends JFrame {
 		RoverAddLink.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				Events.roverLinkClicked(0);
+				InterfaceEvents.roverLinkClicked(0);
 			}
 		});
 		RoverAddLink.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -343,7 +344,7 @@ public class Form extends JFrame {
 				@Override
 				public void mouseClicked(MouseEvent e){
 					if (RoverBtns[hold].isEnabled()){
-						Events.actionButtonClicked(0, hold);
+						InterfaceEvents.actionButtonClicked(0, hold);
 					}
 				}
 			});
@@ -369,7 +370,7 @@ public class Form extends JFrame {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == 10){
-					Events.sendSatMessage();
+					InterfaceEvents.sendSatMessage();
 				}
 			}
 		});
@@ -381,7 +382,7 @@ public class Form extends JFrame {
 		SatSendBtn = new JButton("Send");
 		SatSendBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				Events.sendSatMessage();
+				InterfaceEvents.sendSatMessage();
 			}
 		});
 		SatSendBtn.setOpaque(false);
@@ -393,7 +394,7 @@ public class Form extends JFrame {
 		SatAddLink.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				Events.satLinkClicked(0);
+				InterfaceEvents.satLinkClicked(0);
 			}
 		});
 		SatAddLink.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -406,7 +407,7 @@ public class Form extends JFrame {
 		SatEditLink.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				Events.satLinkClicked(1);
+				InterfaceEvents.satLinkClicked(1);
 			}
 		});
 		SatEditLink.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -419,7 +420,7 @@ public class Form extends JFrame {
 		SatDeleteLink.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				Events.satLinkClicked(2);
+				InterfaceEvents.satLinkClicked(2);
 			}
 		});
 		SatDeleteLink.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -440,7 +441,7 @@ public class Form extends JFrame {
 				@Override
 				public void mouseClicked(MouseEvent e){
 					if (SatBtns[hold].isEnabled()){
-						Events.actionButtonClicked(1, hold);
+						InterfaceEvents.actionButtonClicked(1, hold);
 					}
 				}
 			});
@@ -452,15 +453,15 @@ public class Form extends JFrame {
 		ExitBtn.setOpaque(false);
 		ExitBtn.setBorder(null);
 		ExitBtn.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-		ExitBtn.setImage(new ImageIcon(Form.class.getResource("/Close.png")));
-		ExitBtn.setHoverImage(new ImageIcon(Form.class.getResource("/Close Hover.png")));
+		ExitBtn.setImage(new ImageIcon(InterfaceForm.class.getResource("/Close.png")));
+		ExitBtn.setHoverImage(new ImageIcon(InterfaceForm.class.getResource("/Close Hover.png")));
 		ExitBtn.setToolTipText("");
 		ExitBtn.setMargin(0);
 		ExitBtn.setBounds(959, 11, 48, 19);
 		ExitBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				Events.CODE.closeProgram();
+				InterfaceEvents.CODE.closeProgram();
 				System.exit(0);
 			}
 		});
@@ -471,8 +472,8 @@ public class Form extends JFrame {
 		MinimizeBtn.setToolTipText("");
 		MinimizeBtn.setBorder(null);
 		MinimizeBtn.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-		MinimizeBtn.setImage(new ImageIcon(Form.class.getResource("/Minimize.png")));
-		MinimizeBtn.setHoverImage(new ImageIcon(Form.class.getResource("/Minimize Hover.png")));
+		MinimizeBtn.setImage(new ImageIcon(InterfaceForm.class.getResource("/Minimize.png")));
+		MinimizeBtn.setHoverImage(new ImageIcon(InterfaceForm.class.getResource("/Minimize Hover.png")));
 		MinimizeBtn.setMargin(0);
 		MinimizeBtn.setBounds(931, 11, 29, 19);
 		MinimizeBtn.addMouseListener(new MouseAdapter() {
@@ -491,7 +492,7 @@ public class Form extends JFrame {
 		contentPane.add(VersionLbl);
 		
 		Background = new BackgroundImage();
-		Background.setIcon(new ImageIcon(Form.class.getResource("/Background.png")));
+		Background.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Background.png")));
 		Background.setBounds(0, 0, 1007, 567);
 		contentPane.add(Background);
 		

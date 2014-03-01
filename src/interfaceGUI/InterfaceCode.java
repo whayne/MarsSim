@@ -16,17 +16,14 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
-import gnu.io.* ;
-// RXTX binary builds provided as a courtesy of Mfizz Inc. (http://mfizz.com/).
-// Please see http://mfizz.com/oss/rxtx-for-java for more information.
+import objects.Globals;
+import objects.ThreadTimer;
+import objects.ZDate;
 
-public class Code {
+public class InterfaceCode {
 
-	static Form GUI = new Form();
-	Enumeration portList;
-    CommPortIdentifier portId;
-    SerialPort serialPort;
-    OutputStream outputStream;
+	static InterfaceForm GUI = new InterfaceForm();
+	OutputStream outputStream;
     InputStream inputStream;
     boolean outputBufferEmptyFlag = false;
     ThreadTimer serialCheck;	
@@ -68,14 +65,14 @@ public class Code {
 	// SETUP
 	
 	static void align(){
-		GUI = Form.frame;
+		GUI = InterfaceForm.frame;
 	}
 	
 	public void initalize(){
 		alignComponents();
 		serialCheck = new ThreadTimer(400, new Runnable(){
 			public void run(){
-				Events.CODE.updateSerialCom();
+				InterfaceEvents.CODE.updateSerialCom();
 			}
 		}, ThreadTimer.FOREVER);
 		DateTime = new ZDate();
@@ -97,12 +94,12 @@ public class Code {
 			}
 		}, ThreadTimer.FOREVER);
 		try {
-			dataFile = new File("Rover Logs\\Log File " + DateTime.toString("MMddhhmm") + ".txt");
+			/* dataFile = new File("Rover Logs\\Log File " + DateTime.toString("MMddhhmm") + ".txt");
 			dataFile.createNewFile();
 			LogFile = new FileWriter(dataFile);
 			LogFile.write("Connection Opened with " + connectedPort + DateTime.toString(" on MM-dd-yyyy at hh:mm:ss"));
 			LogFile.write(System.getProperty("line.separator"));
-			LogFile.write(System.getProperty("line.separator"));
+			LogFile.write(System.getProperty("line.separator")); */
 		} catch (Exception e) {
 			HandleError(e);
 		}
@@ -182,13 +179,13 @@ public class Code {
 	}
 	
 	public void closeProgram(){
-		try {
+		/* try {
 			LogFile.write(System.getProperty("line.separator"));
 			writeToLog("Communication Closed");
 			LogFile.close();
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
+		} */
 	}
 	
 	public void pingRover(){
@@ -196,7 +193,6 @@ public class Code {
 		writeToSerial("s g ^", true);
 		listenForSignal("g ^", new Runnable(){
 			public void run(){
-				writeToLog("Ping to Rover shows Connected.");
 				Connected = true;
 				GUI.ConnectionLbl.setText("Connected for 0 min.");
 				GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Rover Connected: " + DateTime.toString("hh:mm:ss") + "\n");
@@ -204,7 +200,6 @@ public class Code {
 			}
 		}, new Runnable(){
 			public void run(){
-				writeToLog("No Rover response to Ping.");
 				Connected = false;
 				GUI.ConnectionLbl.setText("Not Connected.");
 				GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Rover did not respond.\n");
@@ -218,84 +213,14 @@ public class Code {
 	// COM CONNECTION STUFF
 	
 	public void resetConnection(){
-		writeToLog("Connected with " + connectedPort);
-		boolean portFound = false;
-		portList = CommPortIdentifier.getPortIdentifiers();
-
-		while (portList.hasMoreElements()) {
-		    portId = (CommPortIdentifier) portList.nextElement();
-
-		    if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-
-			if (portId.getName().equals(connectedPort)) {
-
-			    portFound = true;
-			    try {
-			    	serialPort = 
-			    			(SerialPort) portId.open("SimpleWrite", 2000);
-			    } 
-			    catch (PortInUseException e) {
-			    	continue;
-			    } 
-
-			    try {
-			    	outputStream = serialPort.getOutputStream();
-			    	inputStream = serialPort.getInputStream();
-			    } 
-			    catch (IOException e) {
-			    	HandleError(e);
-			    }
-			    
-			    try {
-			    	serialPort.setSerialPortParams(9600, 
-			    			SerialPort.DATABITS_8, 
-			    			SerialPort.STOPBITS_1, 
-			    			SerialPort.PARITY_NONE);
-			    } 
-			    catch (UnsupportedCommOperationException e) {
-			    	HandleError(e);
-			    }
-
-			    try {
-			    	serialPort.notifyOnOutputEmpty(true);
-			    } 
-			    catch (Exception e) {
-			    	HandleError(e);
-			    }
-			} 
-		    } 
-		} 
-
-		if (!portFound) {
-			Connected = false;
-			final String hold = connectedPort;
-			connectedPort = "";
-			writeToLog(hold + " failed to resond");
-			portList = CommPortIdentifier.getPortIdentifiers();
-			String ports = "";
-			while (portList.hasMoreElements()){
-				CommPortIdentifier id = (CommPortIdentifier) portList.nextElement();
-				ports += "\n    " + id.getName();
-			}
-			final String printPorts = ports;
-			new ThreadTimer(0, new Runnable(){
-				public void run(){
-					(new PopUp()).showConfirmDialog("Could not connect to " + hold + ".\nAvailable Ports:" + printPorts, "Connection Failure", PopUp.DEFAULT_OPTIONS);
-				}
-			}, 1);
-			GUI.PortSelectCombo.requestFocus();
-			GUI.PortSelectCombo.showPopup();
+		if (Connected){
+			pingRover();
 		}
 		else {
-			if (Connected){
-				pingRover();
-			}
-			else {
-				try {
-					Thread.sleep(600);
-				} catch (Exception e) {}
-				pingRover();
-			}
+			try {
+				Thread.sleep(600);
+			} catch (Exception e) {}
+			pingRover();
 		}
 	}
 	
@@ -303,31 +228,49 @@ public class Code {
 		connectionTime = 0;
 		connectedPort = (String)GUI.PortSelectCombo.getSelectedItem();
 		GUI.ConnectionLbl.setText("Connected for " + connectionTime + " min.");
-		writeToLog("Connection Changed to " + connectedPort);
+		// writeToLog("Connection Changed to " + connectedPort);
 		resetConnection();
 	}
 
 	public void writeToSerial(String msg){
 		if (Connected && !muted){
-			writeToLog("Command sent: \'" + msg + "\'" + DateTime.toString());
-			try {
-            	outputStream.write(msg.getBytes());
-        	} catch (Exception e) {
-        		GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Message Failed" + "\n");
-        		pingRover();
-        	}
+			//writeToLog("Command sent: \'" + msg + "\'" + DateTime.toString());
+			//try {
+            // 	outputStream.write(msg.getBytes());
+        	//} catch (Exception e) {
+        	//	GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Message Failed" + "\n");
+        	//	pingRover();
+        	//}
+			char[] output = msg.toCharArray();
+			int x = 0;
+			while (x < output.length){
+				Globals.writeToSerial(output[x], 'g'); // Write to Serial one char at a time
+				try {
+					Thread.sleep(2); // Pause for sending
+				} catch (InterruptedException e) {}
+				x++;
+			}
 		}
 	}
 	
 	public void writeToSerial(String msg, boolean override){
 		if ((Connected || override) && !muted){
-			writeToLog("Command sent: \'" + msg + "\'" + DateTime.toString());
-			try {
-            	outputStream.write(msg.getBytes());
-        	} catch (Exception e) {
-        		GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Message Failed" + "\n");
-        		pingRover();
-        	}
+			//writeToLog("Command sent: \'" + msg + "\'" + DateTime.toString());
+			//try {
+            // 	outputStream.write(msg.getBytes());
+        	//} catch (Exception e) {
+        	//	GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Message Failed" + "\n");
+        	//	pingRover();
+        	//}
+			char[] output = msg.toCharArray();
+			int x = 0;
+			while (x < output.length){
+				Globals.writeToSerial(output[x], 'g'); // Write to Serial one char at a time
+				try {
+					Thread.sleep(2); // Pause for sending
+				} catch (InterruptedException e) {}
+				x++;
+			}
 		}
 	}
 	
@@ -344,7 +287,7 @@ public class Code {
 							x++;
 						}
 						GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Recieved: " + data + "\n");
-						writeToLog("Recieved Note: " + data);
+						// writeToLog("Recieved Note: " + data);
 					}
 					else if (input[2] == 'i'){
 						receivingPhoto = true;
@@ -375,12 +318,15 @@ public class Code {
 	private String readFromSerial(){
 		if (!connectedPort.equals("")){
 			try {
-				if (inputStream.available() > 0){
+					//if (inputStream.available() > 0){
+				if (Globals.RFAvailable('g') > 0){
 					// System.out.println("Available");
 					Thread.sleep(20);
 					String out = "";
-					while(inputStream.available() > 0) {
-						out += (char)(inputStream.read());
+						//while(inputStream.available() > 0) {
+					while (Globals.RFAvailable('g') > 0) {
+							//out += (char)(inputStream.read());
+						out += (char)Globals.ReadSerial('g');
 					}
 					if (listening){
 						if (out.equals(listenFor)){
@@ -568,14 +514,14 @@ public class Code {
 				GUI.SatBtns[x].setToolTipText("Unassigned");
 			}
 			try {
-				GUI.RoverBtns[x].setImage(new ImageIcon(Form.class.getResource("/" + actionIcons[0][x])));
+				GUI.RoverBtns[x].setImage(new ImageIcon(InterfaceForm.class.getResource("/" + actionIcons[0][x])));
 			}
 			catch (Exception e) {
 				GUI.RoverBtns[x].setImage(null);
 			}
 			GUI.RoverBtns[x].setEnabled(!actionCommands[0][x].equals(""));
 			try {
-				GUI.SatBtns[x].setImage(new ImageIcon(Form.class.getResource("/" + actionIcons[1][x])));
+				GUI.SatBtns[x].setImage(new ImageIcon(InterfaceForm.class.getResource("/" + actionIcons[1][x])));
 			}
 			catch (Exception e){
 				GUI.SatBtns[x].setImage(null);
@@ -827,7 +773,7 @@ public class Code {
 				while (inputStream.available() <= 0) {}
 					Thread.sleep(20);
 					GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Receiving Image.\n");
-					writeToLog("Receiving Image");
+					// writeToLog("Receiving Image");
 					String text = GUI.SerialDisplayLbl.getText();
 					byte[] bytes = new byte[length];
 					char[] progress = new char[length / 500 + 1];
@@ -868,10 +814,10 @@ public class Code {
 						fos.write(bytes);
 						receivedFiles = Augment(receivedFiles, image.getAbsolutePath());
 						fos.close();
-						writeToLog("Recieved Image.  Stored in: " + image.getAbsolutePath());
+						// writeToLog("Recieved Image.  Stored in: " + image.getAbsolutePath());
 						receivingPhoto = false;
 						GUI.SerialDisplayLbl.setText(text + "Done.\n");
-						GUI.MailBtn.setIcon(new ImageIcon(Form.class.getResource("/Mail_Message.png")));
+						GUI.MailBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Mail_Message.png")));
 					}
 					else {
 						GUI.SerialDisplayLbl.setText(text + "Image transfer failed, incomplete size requirement.\n");
@@ -921,7 +867,7 @@ public class Code {
 					}, 1);
 					receivedFiles = Remove(receivedFiles, choice);
 					if (receivedFiles.length == 0){
-						GUI.MailBtn.setIcon(new ImageIcon(Form.class.getResource("/Mail.png")));
+						GUI.MailBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Mail.png")));
 					}
 				} catch (Exception e) {}
 			}
@@ -977,7 +923,7 @@ public class Code {
 		}
 	}
 	
-	public void writeToLog(String what){
+	/*public void writeToLog(String what){
 		try {
 			LogFile.write(what + "\t\t" + DateTime.toString());
 			LogFile.write(System.getProperty("line.separator"));
@@ -985,7 +931,7 @@ public class Code {
 		catch (Exception e) {
 			HandleError(e);
 		}
-	}
+	}*/
 	
 	
 	// SUPPORTING METHODS
@@ -1033,11 +979,11 @@ public class Code {
 	public void HandleError(Exception e){
 		e.printStackTrace();
 		JOptionPane.showConfirmDialog(GUI, "The program broke, restart and tell Zac.", "A Fatal Error Occured", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
-		writeToLog("The GUI encountered and Error");
-		try {
-			LogFile.write(e.getMessage());
-			LogFile.write(System.getProperty("line.separator"));
-		} catch (IOException e1) {}
+		// writeToLog("The GUI encountered and Error");
+		//try {
+			// LogFile.write(e.getMessage());
+			// LogFile.write(System.getProperty("line.separator"));
+		//} catch (IOException e1) {}
 		System.exit(0);
 		
 	}

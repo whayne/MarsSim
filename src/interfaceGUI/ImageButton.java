@@ -12,6 +12,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.border.LineBorder;
 
+import objects.ThreadTimer;
+
 public class ImageButton extends JLabel {
 
 	protected boolean working = false;
