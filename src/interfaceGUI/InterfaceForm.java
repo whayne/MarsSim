@@ -98,8 +98,7 @@ public class InterfaceForm extends JFrame {
 			}
 			@Override
 			public void windowOpened(WindowEvent arg0) {
-				InterfaceEvents.CODE.initalize();
-				InterfaceEvents.CODE.resetConnection();
+				InterfaceEvents.Window_Opened();
 			}
 		});
 		setIconImage(Toolkit.getDefaultToolkit().getImage(InterfaceForm.class.getResource("/Dish.png")));

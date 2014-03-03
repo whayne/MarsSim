@@ -14,6 +14,11 @@ import java.awt.Font;
 import javax.swing.SwingConstants;
 import javax.swing.border.LineBorder;
 import java.awt.Color;
+import javax.swing.JSlider;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class WrapperForm extends JFrame {
 
@@ -23,6 +28,7 @@ public class WrapperForm extends JFrame {
 	JLabel RoverBufferLbl;
 	JLabel SatelliteBufferLbl;
 	JLabel GroundBufferLbl;
+	JSlider TimeSlider;
 
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -40,6 +46,7 @@ public class WrapperForm extends JFrame {
 	}	
 
 	public WrapperForm() {
+		setResizable(false);
 		setAlwaysOnTop(true);
 		initalize();
 	}
@@ -86,19 +93,46 @@ public class WrapperForm extends JFrame {
 		RoverBufferLbl = new JLabel("");
 		RoverBufferLbl.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		RoverBufferLbl.setBorder(new LineBorder(new Color(0, 0, 0)));
-		RoverBufferLbl.setBounds(87, 38, 180, 20);
+		RoverBufferLbl.setBounds(87, 38, 489, 20);
 		contentPane.add(RoverBufferLbl);
 		
 		SatelliteBufferLbl = new JLabel("");
 		SatelliteBufferLbl.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		SatelliteBufferLbl.setBorder(new LineBorder(new Color(0, 0, 0)));
-		SatelliteBufferLbl.setBounds(87, 64, 180, 20);
+		SatelliteBufferLbl.setBounds(87, 64, 489, 20);
 		contentPane.add(SatelliteBufferLbl);
 		
 		GroundBufferLbl = new JLabel("");
 		GroundBufferLbl.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		GroundBufferLbl.setBorder(new LineBorder(new Color(0, 0, 0)));
-		GroundBufferLbl.setBounds(87, 89, 180, 20);
+		GroundBufferLbl.setBounds(87, 89, 489, 20);
 		contentPane.add(GroundBufferLbl);
+		
+		JLabel lblTimeRate = new JLabel("Time Rate");
+		lblTimeRate.setFont(new Font("Bookman Old Style", Font.BOLD, 15));
+		lblTimeRate.setBounds(10, 131, 107, 19);
+		contentPane.add(lblTimeRate);
+		
+		TimeSlider = new JSlider();
+		TimeSlider.setMaximum(70);
+		TimeSlider.setValue(30);
+		TimeSlider.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent arg0) {
+				
+			}
+		});
+		TimeSlider.setMajorTickSpacing(10);
+		TimeSlider.setMinorTickSpacing(1);
+		TimeSlider.setPaintTicks(true);
+		TimeSlider.setSnapToTicks(true);
+		TimeSlider.setBounds(20, 161, 556, 34);
+		contentPane.add(TimeSlider);
+		
+		JLabel label = new JLabel("  1/8            1/4             1/2               1                 2                 4                  8               16");
+		label.setHorizontalAlignment(SwingConstants.LEFT);
+		label.setFont(new Font("Bookman Old Style", Font.PLAIN, 14));
+		label.setBounds(10, 200, 576, 14);
+		contentPane.add(label);
 	}
 }

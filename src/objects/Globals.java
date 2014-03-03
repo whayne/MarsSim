@@ -8,6 +8,8 @@ public class Globals {
 	private static byte[] RoverRFserial = new byte[0];
 	private static byte[] GroundRFserial = new byte[0];
 	
+	private static double timeScale = 1.0;
+	
 	public static void writeToSerial(char write, char from){
 		writeToSerial((byte)write, from);
 	}
@@ -108,6 +110,14 @@ public class Globals {
 			x++;
 		}
 		return out;
+	}
+	
+	public static double getTimeScale(){
+		return timeScale;
+	}
+	
+	public static void setTimeScale(double time){
+		timeScale = time;
 	}
 	
 }

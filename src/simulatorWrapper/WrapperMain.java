@@ -1,5 +1,8 @@
 package simulatorWrapper;
 
+import objects.Globals;
+import objects.ThreadTimer;
+
 public class WrapperMain {
 
 	static WrapperForm GUI = new WrapperForm();
@@ -13,11 +16,23 @@ public class WrapperMain {
 	
 	public void startSimulator(){
 		
-		interfaceGUI.InterfaceForm.main(new String[1]); // Start the interface GUI
+		new ThreadTimer(0, new Runnable() {
+			public void run(){
+				interfaceGUI.InterfaceForm.main(new String[1]); // Start the interface GUI
+			}
+		}, 1);
 		
-		roverMock.RoverForm.main(new String[1]); // Start the mock Rover
+		new ThreadTimer(0, new Runnable() {
+			public void run(){
+				roverMock.RoverForm.main(new String[1]); // Start the mock Rover
+			}
+		}, 1);
 		
-		satelliteMock.SatelliteForm.main(new String[1]); // Start the mock Satellite
+		new ThreadTimer(0, new Runnable() {
+			public void run(){
+				satelliteMock.SatelliteForm.main(new String[1]); // Start the mock Satellite
+			}
+		}, 1);
 			
 	}
 	
@@ -46,6 +61,10 @@ public class WrapperMain {
 			x++;
 		}
 		GUI.GroundBufferLbl.setText( buildString(input) );
+	}
+	
+	public void updateTimeScale(){
+		Globals.setTimeScale(Math.pow(2, (GUI.TimeSlider.getValue() - 30) / 10.0));
 	}
 	
 	

@@ -246,7 +246,7 @@ public class InterfaceCode {
 			while (x < output.length){
 				Globals.writeToSerial(output[x], 'g'); // Write to Serial one char at a time
 				try {
-					Thread.sleep(2); // Pause for sending
+					Thread.sleep((int)(20 / Globals.getTimeScale())); // Pause for sending
 				} catch (InterruptedException e) {}
 				x++;
 			}
@@ -267,7 +267,7 @@ public class InterfaceCode {
 			while (x < output.length){
 				Globals.writeToSerial(output[x], 'g'); // Write to Serial one char at a time
 				try {
-					Thread.sleep(2); // Pause for sending
+					Thread.sleep((int)(20 / Globals.getTimeScale())); // Pause for sending
 				} catch (InterruptedException e) {}
 				x++;
 			}
@@ -321,7 +321,7 @@ public class InterfaceCode {
 					//if (inputStream.available() > 0){
 				if (Globals.RFAvailable('g') > 0){
 					// System.out.println("Available");
-					Thread.sleep(20);
+					Thread.sleep((int)(20 / Globals.getTimeScale()));
 					String out = "";
 						//while(inputStream.available() > 0) {
 					while (Globals.RFAvailable('g') > 0) {
@@ -771,7 +771,7 @@ public class InterfaceCode {
 			GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Waiting for Image.\n");
 			try {
 				while (inputStream.available() <= 0) {}
-					Thread.sleep(20);
+					Thread.sleep((int)(20 / Globals.getTimeScale()));
 					GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Receiving Image.\n");
 					// writeToLog("Receiving Image");
 					String text = GUI.SerialDisplayLbl.getText();

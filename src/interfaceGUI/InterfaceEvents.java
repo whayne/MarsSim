@@ -4,6 +4,12 @@ public class InterfaceEvents {
 
 	static InterfaceCode CODE = new InterfaceCode();
 	
+	static void Window_Opened(){
+		CODE.initalize();
+		CODE.resetConnection();
+		simulatorWrapper.WrapperEvents.WindowOpened();
+	}
+	
 	static void COMPortChanged(){
 		CODE.changeCOMPort();
 	}

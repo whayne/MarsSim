@@ -8,6 +8,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import java.awt.Toolkit;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class RoverForm extends JFrame {
 
@@ -37,7 +39,13 @@ public class RoverForm extends JFrame {
 	 * Create the frame.
 	 */
 	public RoverForm() {
-		setIconImage(Toolkit.getDefaultToolkit().getImage(RoverForm.class.getResource("/Rover.png")));
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowOpened(WindowEvent e) {
+				RoverEvents.Window_Opened();
+			}
+		});
+		setIconImage(Toolkit.getDefaultToolkit().getImage(RoverForm.class.getResource("/Tire.png")));
 		setTitle("Mock Rover");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);

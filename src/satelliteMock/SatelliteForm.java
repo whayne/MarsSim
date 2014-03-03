@@ -8,6 +8,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import java.awt.Toolkit;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class SatelliteForm extends JFrame {
 
@@ -31,6 +33,12 @@ public class SatelliteForm extends JFrame {
 	}
 
 	public SatelliteForm() {
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowOpened(WindowEvent arg0) {
+				SatelliteEvents.Window_Opened();
+			}
+		});
 		setIconImage(Toolkit.getDefaultToolkit().getImage(SatelliteForm.class.getResource("/Satelite.png")));
 		setTitle("Mock Satellite");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
