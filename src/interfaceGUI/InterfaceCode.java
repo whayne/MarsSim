@@ -70,14 +70,14 @@ public class InterfaceCode {
 	
 	public void initalize(){
 		alignComponents();
-		serialCheck = new ThreadTimer(400, new Runnable(){
+		serialCheck = new ThreadTimer((int)(400/Globals.getTimeScale()), new Runnable(){
 			public void run(){
 				InterfaceEvents.CODE.updateSerialCom();
 			}
 		}, ThreadTimer.FOREVER);
 		DateTime = new ZDate();
 		DateTime.setFormat("\t\t[hh:mm:ss]");
-		clock = new ThreadTimer(1000, new Runnable(){
+		clock = new ThreadTimer((int)(1000/Globals.getTimeScale()), new Runnable(){
 			public void run(){
 				if (Connected){
 					DateTime.advanceClock();
@@ -216,12 +216,6 @@ public class InterfaceCode {
 		if (Connected){
 			pingRover();
 		}
-		else {
-			try {
-				Thread.sleep(600);
-			} catch (Exception e) {}
-			pingRover();
-		}
 	}
 	
 	public void changeCOMPort(){
@@ -277,7 +271,7 @@ public class InterfaceCode {
 	public void updateSerialCom(){
 		if (!receivingPhoto){
 			char[] input = readFromSerial().toCharArray();
-			if (input.length > 0){
+			if (input.length > 2){
 				if (input[0] == 'g'){
 					if (input[2] == 'n'){
 						String data = "";
@@ -369,7 +363,7 @@ public class InterfaceCode {
 				failaction.run();
 			}
 		};
-		listenTimer = new ThreadTimer(secs*1000, listenFail, 1);
+		listenTimer = new ThreadTimer((int)(secs*1000/Globals.getTimeScale()), listenFail, 1);
 	}
 	
 	

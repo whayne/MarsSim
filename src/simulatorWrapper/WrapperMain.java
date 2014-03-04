@@ -65,6 +65,7 @@ public class WrapperMain {
 	
 	public void updateTimeScale(){
 		Globals.setTimeScale(Math.pow(2, (GUI.TimeSlider.getValue() - 30) / 10.0));
+		System.out.println(Globals.getTimeScale());
 	}
 	
 	

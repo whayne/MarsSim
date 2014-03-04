@@ -119,7 +119,7 @@ public class WrapperForm extends JFrame {
 		TimeSlider.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
-				
+				WrapperEvents.TimeSliderValue_Changed();
 			}
 		});
 		TimeSlider.setMajorTickSpacing(10);
