@@ -17,4 +17,8 @@ public class SatelliteEvents {
 			}
 		}, 1);
 	}
+	
+	static void BrowseForFile_Clicked(){
+		CODE.browseForINOFile();
+	}
 }

@@ -1,10 +1,20 @@
 package satelliteMock;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+
 import objects.Globals;
+import objects.ThreadTimer;
 
 public class SatelliteCode {
 
 	static SatelliteForm GUI = new SatelliteForm();
+	private ThreadTimer loopFunction;
+	
 	
 	// private int imageSize;
 	// private String filename;
@@ -14,6 +24,45 @@ public class SatelliteCode {
 	
 	static void align(){
 		GUI = SatelliteForm.frame;
+	}
+	
+	public void browseForINOFile(){
+		JFileChooser browse = new JFileChooser();
+		browse.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Arduino Code", "ino"));
+		browse.showOpenDialog(GUI);
+		String filepath = browse.getSelectedFile().getAbsolutePath();
+		GUI.FileLocationTxt.setText(filepath);
+		newFileConnected();
+	}
+	
+	public void newFileConnected(){
+		try {
+			loopFunction.Stop();
+		} catch (Exception e) {}
+		if (GUI.FileLocationTxt.getText().equals("")){
+			return;
+		}
+		try {
+			Scanner file = new Scanner(new File(GUI.FileLocationTxt.getText()));
+			while (file.hasNextLine()){
+				//System.out.println(file.nextLine());
+				//TODO interpret text to commands
+				
+			}
+			loopFunction  = new ThreadTimer(2, new Runnable(){
+				public void run(){
+					Runnable[] cmds = new Runnable[0]; // The interpreted list of commands
+					int x = 0;
+					while (x < cmds.length){
+						cmds[x].run(); //run each command in order
+						x++;
+					}
+				}
+			}, ThreadTimer.FOREVER); // Do it again until stopped
+		} 
+		catch (FileNotFoundException e) {
+			JOptionPane.showConfirmDialog(GUI, "The File Could Not be found.", "Invalid File", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
+		}		
 	}
 	
 	

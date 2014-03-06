@@ -6,12 +6,16 @@ import objects.ThreadTimer;
 public class WrapperMain {
 
 	static WrapperForm GUI = new WrapperForm();
-	
+	static MapFrame MAP;
 	
 	// Start Up
 	
 	static void align(){
 		GUI = WrapperForm.frame;
+	}
+	
+	static void alignMap(){
+		MAP = MapFrame.frame;
 	}
 	
 	public void startSimulator(){
@@ -31,6 +35,13 @@ public class WrapperMain {
 		new ThreadTimer(0, new Runnable() {
 			public void run(){
 				satelliteMock.SatelliteForm.main(new String[1]); // Start the mock Satellite
+			}
+		}, 1);
+		
+		new ThreadTimer(0, new Runnable() {
+			public void run(){
+				MAP = new MapFrame();
+				MapFrame.main(new String[1]);
 			}
 		}, 1);
 			
