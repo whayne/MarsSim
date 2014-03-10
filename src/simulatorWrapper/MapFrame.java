@@ -20,6 +20,7 @@ public class MapFrame extends JFrame {
 	static MapFrame frame;
 	private JPanel contentPane;
 	private BackgroundImage Grid;
+	public MapIcon RoverMarker;
 
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -37,7 +38,8 @@ public class MapFrame extends JFrame {
 	}
 	
 	public MapFrame() {
-		initalize();		
+		initalize();	
+		contentPane.setComponentZOrder(Grid, contentPane.getComponentCount()-1);	
 	}
 	
 	private void initalize(){
@@ -55,10 +57,10 @@ public class MapFrame extends JFrame {
 		Grid.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Position Background.png")));
 		Grid.setBounds(0, 0, 482, 374);
 		contentPane.add(Grid);
-		contentPane.setComponentZOrder(Grid, contentPane.getComponentCount()-1);
 		
-		JLabel label = new JLabel();
-		label.setBounds(214, 175, 46, 14);
-		contentPane.add(label);
+		RoverMarker = new MapIcon();
+		RoverMarker.setBounds(177, 177, 70, 70);
+		RoverMarker.setAngle(90);
+		contentPane.add(RoverMarker);
 	}
 }

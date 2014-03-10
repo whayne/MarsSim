@@ -65,7 +65,6 @@ public class SatelliteForm extends JFrame {
 		panel.setLayout(new BorderLayout(0, 0));
 		
 		JButton btnBrowse = new JButton("Browse");
-		btnBrowse.setEnabled(false);
 		btnBrowse.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				SatelliteEvents.BrowseForFile_Clicked();
@@ -74,7 +73,6 @@ public class SatelliteForm extends JFrame {
 		panel.add(btnBrowse, BorderLayout.EAST);
 		
 		FileLocationTxt = new JTextField();
-		FileLocationTxt.setEnabled(false);
 		FileLocationTxt.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent arg0) {
