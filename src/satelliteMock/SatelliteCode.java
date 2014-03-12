@@ -16,13 +16,9 @@ public class SatelliteCode {
 	private String[] CodeFile = new String[0];
 	private boolean hasCode = false;
 	
-	String[] variableNames = new String[0];
-	Object[] variableValues = new Object[0];
-	Class[] variableTypes = new Class[0];
-	
-	String[] localVariableNames = new String[0];
-	Object[] localVariableValues = new Object[0];
-	Class[] localVariableTypes = new Class[0];
+	String[][] variableNames = new String[15][0];
+	Object[][] variableValues = new Object[15][0];
+	Class[][] variableTypes = new Class[15][0];
 	
 	static void align(){
 		GUI = SatelliteForm.frame;
@@ -48,7 +44,7 @@ public class SatelliteCode {
 			int bracketsInside = 0;
 			
 			while (file.hasNextLine()){
-				String line = file.nextLine();
+				String line = file.nextLine();				
 				if (line.length() < 1){
 					continue; 
 				}
@@ -62,7 +58,6 @@ public class SatelliteCode {
 				}
 				
 				if (lineIsVariableDec(line)){ // A variable is declared
-					int y = variableNames.length;
 					String type = getVariableType(line);
 					String name = getVariableName(line);
 					String value = getVariableValue(line);
@@ -79,14 +74,14 @@ public class SatelliteCode {
 									storeVal += value.charAt(x);
 									x++;
 								}
-								variableNames = Augment(variableNames, name);
-								variableTypes = Augment(variableTypes, String.class);
-								variableValues = Augment(variableValues, storeVal);
+								variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name);
+								variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], String.class);
+								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], storeVal);
 								x = 0;
 								while (x < storeVal.length()){
-									variableNames = Augment(variableNames, name + "[" + x + "]");
-									variableTypes = Augment(variableTypes, Character.class);
-									variableValues = Augment(variableValues, storeVal.charAt(x));
+									variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name + "[" + x + "]");
+									variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Character.class);
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], storeVal.charAt(x));
 									x++;
 								}
 							}
@@ -101,107 +96,110 @@ public class SatelliteCode {
 									x++;
 								}
 								int length = Integer.parseInt(prelength);
-								variableNames = Augment(variableNames, name);
-								variableTypes = Augment(variableTypes, String.class);
-								variableValues = Augment(variableValues, "");
+								variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name);
+								variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], String.class);
+								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], "");
 								prelength = ""; // recycling
 								x = 0;
 								while (x < length){
-									variableNames = Augment(variableNames, name + "[" + x + "]");
-									variableTypes = Augment(variableTypes, Character.class);
-									variableValues = Augment(variableValues, '\0');
+									variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name + "[" + x + "]");
+									variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Character.class);
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\0');
 									prelength += '\0';
 									x++;
 								}
-								variableValues[getIndexOf(variableNames, name)] = prelength;
+								variableValues[bracketsInside][getIndexOf(variableNames[bracketsInside], name)] = prelength;
 							}
 						}
 						else { // Is something else
-							variableTypes = Augment(variableTypes, Object.class);
-							variableValues = Augment(variableValues, value);
+							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Object.class);
+							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value);
 						}
 					}
 					else { // Is not an array
-						variableNames = Augment(variableNames, name);
+						variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name);
 						if (type.equals("int")){
-							variableTypes = Augment(variableTypes, Integer.class);
+							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Integer.class);
 							try {
-								variableValues = Augment(variableValues, Integer.parseInt(value));
+								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], Integer.parseInt(value));
 							}
 							catch (Exception e){
 								try {
-									variableValues = Augment(variableValues, getStoredValue(value));
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
 								}
 								catch (Exception i){
 									if (value.equals("")){
-										variableValues = Augment(variableValues, null);
+										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
 									}
 									else {
 										// TODO code to handle math operations in initalization
-										variableValues = Augment(variableValues, 0);
+										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], 0);
 									}
 								}
 							}
 						}
 						else if (type.equals("boolean")){
-							variableTypes = Augment(variableTypes, Boolean.class);
+							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Boolean.class);
 							try {
-								variableValues = Augment(variableValues, Boolean.parseBoolean(value));
+								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], Boolean.parseBoolean(value));
 							}
 							catch (Exception e){
 								try {
-									variableValues = Augment(variableValues, getStoredValue(value));
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
 								}
 								catch (Exception i){
 									if (value.equals("")){
-										variableValues = Augment(variableValues, null);
+										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
 									}
 									else {
 										// TODO code to analyze boolean, should exist later for if and while
-										variableValues = Augment(variableValues, false);
+										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], false);
 									}
 								}
 							}
 						}
 						else if (type.equals("char")){
-							variableTypes = Augment(variableTypes, Character.class);
+							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Character.class);
 							try {
 								if (value.length() == 3){
-									variableValues = Augment(variableValues, value.charAt(1));
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value.charAt(1));
 								}
 								else {
 									switch (value.charAt(3)){
 									case '0':
-										variableValues = Augment(variableValues, '\0');
+										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\0');
 										break;
 									case 'n':
-										variableValues = Augment(variableValues, '\n');
+										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\n');
 										break;
 									case '\\':
-										variableValues = Augment(variableValues, '\\');
-										break;									
+										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\\');
+										break;				
+									case 't':
+										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\t');
+										break;						
 									}
 								}
 							}
 							catch (Exception e){
 								try {
-									variableValues = Augment(variableValues, getStoredValue(value));
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
 								}
 								catch (Exception i){
 									if (value.equals("Serial.read()")){
-										variableValues = Augment(variableValues, (char)Globals.ReadSerial('s'));
+										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], (char)Globals.ReadSerial('s'));
 									}
 									else {
 										// I don't think there is anyother way to initalize this
-										variableValues = Augment(variableValues, '\0');
+										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\0');
 									}
 								}
 							}
 						}
 						else if (type.equals("File")){
-							variableTypes = Augment(variableTypes, File.class);
+							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], File.class);
 							if (value.equals("")){
-								variableValues = Augment(variableValues, null);
+								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
 							}
 							else {
 								String filename = "";
@@ -220,128 +218,132 @@ public class SatelliteCode {
 									x++;
 								}
 								if (string){
-									variableValues = Augment(variableValues, filename);
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], filename);
 								}
 								else {
-									variableValues = Augment(variableValues, getStoredValue(filename));
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(filename, bracketsInside));
 								}
 							}
 						}
 						else if (type.equals("float")){
-							variableTypes = Augment(variableTypes, Float.class);
+							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Float.class);
 							try {
-								variableValues = Augment(variableValues, Float.parseFloat(value));
+								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], Float.parseFloat(value));
 							}
 							catch (Exception e){
 								try {
-									variableValues = Augment(variableValues, getStoredValue(value));
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
 								}
 								catch (Exception i){
 									if (value.equals("")){
-										variableValues = Augment(variableValues, null);
+										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
 									}
 									else {
 										// TODO code for more math operators
-										variableValues = Augment(variableValues, false);
+										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], false);
 									}
 								}
 							}
 						}
 						else { // Other object
-							variableTypes = Augment(variableTypes, Object.class);
-							variableValues = Augment(variableValues, value);
+							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Object.class);
+							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value);
 						}
 					}
 				}
 				else if (contains(line, "=")){ // Variable value changed
 					try {
 						String value = getVariableValue(line);
-						Class type = variableTypes[getIndexOf(variableNames, getVariableName(line))];
+						Class type = null;
+						int locallity = bracketsInside;
+						while (locallity >= 0){
+							try {
+								type = variableTypes[locallity][getIndexOf(variableNames[locallity], beginsWith)];
+								break;
+							}
+							catch (Exception e) {}
+							locallity--;
+						}
 						if (type.equals(Integer.class)){
 							try {
-								variableValues[getIndexOf(variableNames, getVariableName(line))] = Integer.parseInt(value);
+								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = Integer.parseInt(value);
 							}
 							catch (Exception e){
 								try {
-									variableValues[getIndexOf(variableNames, getVariableName(line))] = getStoredValue(value);
+									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
 								}
 								catch (Exception i){
 									// TODO code to handle math operations in initalization
-									variableValues[getIndexOf(variableNames, getVariableName(line))] = 0;
+									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = 0;
 								}
 							}
 						}
 						else if (type.equals(Character.class)){
 							try {
 								if (value.length() == 3){
-									variableValues = Augment(variableValues, value.charAt(1));
+									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = value.charAt(1);
 								}
 								else {
 									switch (value.charAt(3)){
 									case '0':
-										variableValues[getIndexOf(variableNames, getVariableName(line))] = '\0';
+										variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\0';
 										break;
 									case 'n':
-										variableValues[getIndexOf(variableNames, getVariableName(line))] = '\n';
+										variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\n';
 										break;
 									case '\\':
-										variableValues[getIndexOf(variableNames, getVariableName(line))] = '\\';
-										break;									
+										variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\\';
+										break;	
+									case 't':
+										variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\t';
+										break;
 									}
 								}
 							}
 							catch (Exception e){
+								e.printStackTrace();
 								try {
-									variableValues[getIndexOf(variableNames, getVariableName(line))] = getStoredValue(value);
+									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
 								}
-								catch (Exception i){
+								catch (Exception ex){
 									if (value.equals("Serial.read()")){
-										variableValues[getIndexOf(variableNames, getVariableName(line))] = (char)Globals.ReadSerial('s');
+										variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = (char)Globals.ReadSerial('s');
 									}
 									else {
 										// I don't think there is anyother way to initalize this
-										variableValues[getIndexOf(variableNames, getVariableName(line))] = '\0';
+										variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\0';
 									}
 								}
 							}
-							if (contains(value, "[")){
-								String strName = getStartsWith(value);
-								String storeVal = "";
-								int length = ((String)variableValues[getIndexOf(variableNames, getVariableName(strName))]).length();
+							if (contains(beginsWith, "[")){
+								String strName = "";
 								int x = 0;
-								while (x < length){
-									storeVal += (char)getStoredValue(strName);
+								while (beginsWith.charAt(x) != '['){
+									strName += beginsWith.charAt(x);
 									x++;
 								}
-								variableValues[getIndexOf(variableNames, getVariableName(strName))] = storeVal;
-							}
-						}
-						else if (type.equals(Boolean.class)){
-							try {
-								variableValues[getIndexOf(variableNames, getVariableName(line))] = Boolean.parseBoolean(value);
-							}
-							catch (Exception e){
-								try {
-									variableValues[getIndexOf(variableNames, getVariableName(line))] = getStoredValue(value);
+								String storeVal = "";
+								int length = ((String)variableValues[locallity][getIndexOf(variableNames[locallity], strName)]).length();
+								x = 0;
+								while (x < length){
+									storeVal += (char)getStoredValue(strName + "[" + x + "]", locallity);
+									x++;
 								}
-								catch (Exception i){
-									// TODO code to analyze boolean, should exist later for if and while
-									variableValues[getIndexOf(variableNames, getVariableName(line))] = false;
-								}
+								variableValues[locallity][getIndexOf(variableNames[locallity], strName)] = storeVal;
 							}
 						}
 						else if (type.equals(Float.class)){
-							variableTypes = Augment(variableTypes, Float.class);
+							variableTypes[locallity] = Augment(variableTypes[locallity], Float.class);
 							try {
-								variableValues[getIndexOf(variableNames, getVariableName(line))] = Float.parseFloat(value);
+								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = Float.parseFloat(value);
 							}
 							catch (Exception e){
 								try {
-									variableValues[getIndexOf(variableNames, getVariableName(line))] = getStoredValue(value);
+									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
 								}
 								catch (Exception i){
 									// TODO code for more math operators
-									variableValues[getIndexOf(variableNames, getVariableName(line))] = 0.0;
+									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = 0.0;
 								}
 							}
 						}
@@ -362,27 +364,27 @@ public class SatelliteCode {
 								x++;
 							}
 							if (string){
-								variableValues[getIndexOf(variableNames, getVariableName(line))] = filename;
+								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = filename;
 							}
 							else {
-								variableValues[getIndexOf(variableNames, getVariableName(line))] = getStoredValue(filename);
+								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(filename, locallity);
 							}
 						}
 						else if (type.equals(String.class)){
 							if (getStartsWith(value).equals("new")){
 								String string = "";
-								int length = ((String)variableValues[getIndexOf(variableNames, getVariableName(line))]).length();
+								int length = ((String)variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)]).length();
 								int x = 0;
 								while (x < length){
-									variableValues[getIndexOf(variableNames, getVariableName(line) + "[" + x + "]")] = '\0';
+									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith + "[" + x + "]")] = '\0';
 									string += '\0';
 									x++;
 								}
-								variableValues[getIndexOf(variableNames, getVariableName(line))] = string;
+								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = string;
 							}
 						}
 						else {
-							variableValues[getIndexOf(variableNames, getVariableName(line))] = value;
+							variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = value;
 						}
 					} catch (Exception e) {} // If the 'variable' hasn't been declared
 				}
@@ -427,15 +429,15 @@ public class SatelliteCode {
 		if (!hasCode){
 			return;
 		}
-		localVariableNames = new String[0];
-		localVariableTypes = new Class[0];
-		localVariableValues = new Object[0];
+		variableNames[1] = new String[0];
+		variableTypes[1] = new Class[0];
+		variableValues[1] = new Object[0];
 		int bracketsInside = 0;
 		
-		int i = -1;
+		int i = 0;
 		while (i < ino.length){
 			i++;
-			String line = ino[i];
+			String line = ino[i-1];
 			if (line.length() < 1){
 				continue; 
 			}
@@ -449,25 +451,454 @@ public class SatelliteCode {
 			}
 			
 			if (lineIsVariableDec(line)){ // A variable is declared
-				variableNames = Augment(variableNames, getVariableName(line));
-				//variableTypes = Augment(variableTypes, getVariableType(line));
-				variableValues = Augment(variableValues, getVariableValue(line));
-				int y = variableNames.length - 1;
+				String type = getVariableType(line);
+				String name = getVariableName(line);
+				String value = getVariableValue(line);
+				if (contains(type, "*")){ // Is an array
+					if (getStartsWith(type).equals("char")){ //Is a String
+						int x = 0;
+						if (contains(value, "\"")){
+							while (value.charAt(x) != '\"'){
+								x++;
+							}
+							x++;
+							String storeVal = "";
+							while (value.charAt(x) != '\"'){
+								storeVal += value.charAt(x);
+								x++;
+							}
+							variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name);
+							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], String.class);
+							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], storeVal);
+							x = 0;
+							while (x < storeVal.length()){
+								variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name + "[" + x + "]");
+								variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Character.class);
+								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], storeVal.charAt(x));
+								x++;
+							}
+						}
+						else {
+							String prelength = "";
+							while (value.charAt(x) != '['){
+								x++;
+							}
+							x++;
+							while (value.charAt(x) != ']'){
+								prelength += value.charAt(x);
+								x++;
+							}
+							int length = Integer.parseInt(prelength);
+							variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name);
+							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], String.class);
+							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], "");
+							prelength = ""; // recycling
+							x = 0;
+							while (x < length){
+								variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name + "[" + x + "]");
+								variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Character.class);
+								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\0');
+								prelength += '\0';
+								x++;
+							}
+							variableValues[bracketsInside][getIndexOf(variableNames[bracketsInside], name)] = prelength;
+						}
+					}
+					else { // Is something else
+						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Object.class);
+						variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value);
+					}
+				}
+				else { // Is not an array
+					variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name);
+					if (type.equals("int")){
+						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Integer.class);
+						try {
+							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], Integer.parseInt(value));
+						}
+						catch (Exception e){
+							try {
+								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
+							}
+							catch (Exception ex){
+								if (value.equals("")){
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
+								}
+								else {
+									// TODO code to handle math operations in initalization
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], 0);
+								}
+							}
+						}
+					}
+					else if (type.equals("boolean")){
+						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Boolean.class);
+						try {
+							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], Boolean.parseBoolean(value));
+						}
+						catch (Exception e){
+							try {
+								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
+							}
+							catch (Exception ex){
+								if (value.equals("")){
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
+								}
+								else {
+									// TODO code to analyze boolean, should exist later for if and while
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], false);
+								}
+							}
+						}
+					}
+					else if (type.equals("char")){
+						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Character.class);
+						try {
+							if (value.length() == 3){
+								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value.charAt(1));
+							}
+							else {
+								switch (value.charAt(3)){
+								case '0':
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\0');
+									break;
+								case 'n':
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\n');
+									break;
+								case '\\':
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\\');
+									break;			
+								case 't':
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\t');
+									break;							
+								}
+							}
+						}
+						catch (Exception e){
+							try {
+								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
+							}
+							catch (Exception ex){
+								if (value.equals("Serial.read()")){
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], (char)Globals.ReadSerial('s'));
+								}
+								else {
+									// I don't think there is anyother way to initalize this
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\0');
+								}
+							}
+						}
+					}
+					else if (type.equals("File")){
+						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], File.class);
+						if (value.equals("")){
+							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
+						}
+						else {
+							String filename = "";
+							boolean string = false;
+							int x = 0;
+							while (value.charAt(x) != '(') {
+								x++;
+							}
+							x++;
+							if (value.charAt(x) == '\"'){
+								string = true;
+								x++;
+							}
+							while (value.charAt(x) != '\"' || value.charAt(x) == ')'){
+								filename += value.charAt(x);
+								x++;
+							}
+							if (string){
+								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], filename);
+							}
+							else {
+								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(filename, bracketsInside));
+							}
+						}
+					}
+					else if (type.equals("float")){
+						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Float.class);
+						try {
+							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], Float.parseFloat(value));
+						}
+						catch (Exception e){
+							try {
+								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
+							}
+							catch (Exception ex){
+								if (value.equals("")){
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
+								}
+								else {
+									// TODO code for more math operators
+									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], false);
+								}
+							}
+						}
+					}
+					else if (type.equals("uint8_t")){
+						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Byte[].class);
+						variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value);
+					}
+					else { // Other object
+						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Object.class);
+						variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value);
+					}
+				}
 			}
 			else if (beginsWith.equals("if")){
-				
+				int x = 0;
+				while (line.charAt(x) != '('){
+					x++;
+				}
+				x++;
+				String bool = "";
+				int inside = 0;
+				while (line.charAt(x) != ')' && inside != 0){
+					if (line.charAt(x) == '('){
+						inside++;
+					}
+					if (line.charAt(x) == ')'){
+						inside--;
+					}
+					bool += line.charAt(x);
+				}
+				boolean cont = evaluateBool(bool);
 			}
 			else if (beginsWith.equals("while")){
 				
 			}
-			else if (contains(line, "=")){ // Variable value changed
+			else if (contains(line, "=")){
 				try {
-					variableValues[getIndexOf(variableNames, getStartsWith(line))] = getVariableValue(line);
+					String value = getVariableValue(line);
+					Class type = null;
+					int locallity = bracketsInside;
+					while (locallity >= 0){
+						try {
+							type = variableTypes[locallity][getIndexOf(variableNames[locallity], beginsWith)];
+							break;
+						}
+						catch (Exception e) {}
+						locallity--;
+					}
+					if (type.equals(Integer.class)){
+						try {
+							variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = Integer.parseInt(value);
+						}
+						catch (Exception e){
+							try {
+								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
+							}
+							catch (Exception ex){
+								// TODO code to handle math operations in initalization
+								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = 0;
+							}
+						}
+					}
+					else if (type.equals(Character.class)){
+						try {
+							if (value.length() == 3){
+								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = value.charAt(1);
+							}
+							else {
+								switch (value.charAt(3)){
+								case '0':
+									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\0';
+									break;
+								case 'n':
+									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\n';
+									break;
+								case '\\':
+									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\\';
+									break;	
+								case 't':
+									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\t';
+									break;
+								}
+							}
+						}
+						catch (Exception e){
+							e.printStackTrace();
+							try {
+								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
+							}
+							catch (Exception ex){
+								if (value.equals("Serial.read()")){
+									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = (char)Globals.ReadSerial('s');
+								}
+								else {
+									// I don't think there is anyother way to initalize this
+									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\0';
+								}
+							}
+						}
+						if (contains(beginsWith, "[")){
+							String strName = "";
+							int x = 0;
+							while (beginsWith.charAt(x) != '['){
+								strName += beginsWith.charAt(x);
+								x++;
+							}
+							String storeVal = "";
+							int length = ((String)variableValues[locallity][getIndexOf(variableNames[locallity], strName)]).length();
+							x = 0;
+							while (x < length){
+								storeVal += (char)getStoredValue(strName + "[" + x + "]", locallity);
+								x++;
+							}
+							variableValues[locallity][getIndexOf(variableNames[locallity], strName)] = storeVal;
+						}
+					}
+					else if (type.equals(Boolean.class)){
+						try {
+							variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = Boolean.parseBoolean(value);
+						}
+						catch (Exception e){
+							try {
+								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
+							}
+							catch (Exception ex){
+								// TODO code to analyze boolean, should exist later for if and while
+								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = false;
+							}
+						}
+					}
+					else if (type.equals(Float.class)){
+						variableTypes[locallity] = Augment(variableTypes[locallity], Float.class);
+						try {
+							variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = Float.parseFloat(value);
+						}
+						catch (Exception e){
+							try {
+								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
+							}
+							catch (Exception ex){
+								// TODO code for more math operators
+								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = 0.0;
+							}
+						}
+					}
+					else if (type.equals(File.class)){
+						String filename = "";
+						boolean string = false;
+						int x = 0;
+						while (value.charAt(x) != '(') {
+							x++;
+						}
+						x++;
+						if (value.charAt(x) == '\"'){
+							string = true;
+							x++;
+						}
+						while (value.charAt(x) != '\"' || value.charAt(x) == ')'){
+							filename += value.charAt(x);
+							x++;
+						}
+						if (string){
+							variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = filename;
+						}
+						else {
+							variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(filename, locallity);
+						}
+					}
+					else if (type.equals(String.class)){
+						if (getStartsWith(value).equals("new")){
+							String string = "";
+							int length = ((String)variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)]).length();
+							int x = 0;
+							while (x < length){
+								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith + "[" + x + "]")] = '\0';
+								string += '\0';
+								x++;
+							}
+							variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = string;
+						}
+					}
+					else {
+						variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = value;
+					}
 				} catch (Exception e) {} // If the 'variable' hasn't been declared
 			}
 			else if (beginsWith.equals("delay")){
-				
+				try {
+					String prewait = "";
+					int x = 0;
+					while (line.charAt(x) != '('){
+						x++;
+					}
+					x++;
+					while (line.charAt(x) != ')'){
+						prewait += line.charAt(x);
+						x++;
+					}
+					Thread.sleep(Integer.parseInt(prewait));
+				} catch (Exception e) {}
 			}
+			else if (contains(line, "++")){
+				int x = bracketsInside; // Check variable Names from most local back
+				while (x >= 0){
+					try {
+						variableValues[x][getIndexOf(variableNames[x], beginsWith)] = (int)variableValues[x][getIndexOf(variableNames[x], beginsWith)] + 1;
+					}
+					catch (Exception e){ }
+					x--;
+				}
+			}
+			else if (contains(line, "close()")){
+				int z = bracketsInside;
+				while (z >= 0){
+					try { // If it is a file, close it by setting the filepath to null
+						Class varType = variableTypes[z][getIndexOf(variableNames[z], beginsWith)];
+						if (varType.equals(File.class)){
+							variableValues[z][getIndexOf(variableNames[z], beginsWith)] = "";
+						}
+					} catch (Exception ex) {}
+					z--;
+				}
+			}
+			else if (beginsWith.equals("Serial")){
+				String function = "";
+				int x = 0;
+				while (line.charAt(x) != '.'){
+					x++;
+				}
+				x++;
+				while (line.charAt(x) != '('){
+					function += line.charAt(x);
+					x++;
+				}
+				if(function.equals("read")){
+					Globals.ReadSerial('s');
+				}
+				else {
+					x++;
+					String value = "";
+					if (line.charAt(x) == '\"'){ //String
+						x++;
+						while (line.charAt(x) != '\"'){
+							value += line.charAt(x);
+							x++;
+						}
+						SerialPrint(value);
+					}
+					else { // Variable
+						while (line.charAt(x) != ')'){
+							value += line.charAt(x);
+							x++;
+						}
+						Object data = getStoredValue(value, bracketsInside);
+						try {
+							SerialPrint((byte[])data);
+						}
+						catch (Exception e){
+							SerialPrint(data + "");
+						}
+					}
+				}
+			}
+			
 			
 			
 			if (contains(line, "{")){
@@ -477,11 +908,9 @@ public class SatelliteCode {
 				bracketsInside--;
 				continue;
 			}
-		}
-		
-		hasCode = false;
-		
+		}		
 	}
+	
 	
 	public void runCode(){
 		while (true){
@@ -492,6 +921,9 @@ public class SatelliteCode {
 		}
 	}
 	
+	
+	
+	// CODE FOR INTPERETTING
 	
 	// CODE FOR TRANSLATING INO CODE
 	
@@ -550,7 +982,7 @@ public class SatelliteCode {
 		if (isSymbol(chars[x])){
 			return chars[x] + "";
 		}
-		while (!isSymbol(chars[x])){
+		while (!isSymbol(chars[x]) || chars[x] == '[' || chars[x] == ']'){ //Last to for the identification of array variables
 			out += chars[x];
 			x++;
 		}
@@ -563,7 +995,7 @@ public class SatelliteCode {
 	
 	private boolean lineIsVariableDec(String line){
 		String begining = getStartsWith(line);
-		if (begining.equals("const") || begining.equals("int") || begining.equals("char") || begining.equals("File") || begining.equals("byte") || begining.equals("uint16_t") || begining.equals("boolean")){
+		if (begining.equals("const") || begining.equals("int") || begining.equals("char") || begining.equals("File") || begining.equals("byte") || begining.equals("uint16_t") || begining.equals("boolean") || begining.equals("uint8_t")){
 			return true;
 		}
 		if (contains(line, "= " + begining)){
@@ -635,18 +1067,21 @@ public class SatelliteCode {
 		return val;
 	}
 	
-	private Object getStoredValue(String name){
-		try {
-			return localVariableValues[getIndexOf(localVariableNames, name)];
+	private Object getStoredValue(String name, int locallity){
+		if (name.equals("Serial.read()")){
+			return Globals.ReadSerial('s');
 		}
-		catch (Exception e){
+		if (name.equals("Serial.available()")){
+			return Globals.RFAvailable('s');
+		}
+		while (locallity >= 0){
 			try {
-				return variableValues[getIndexOf(variableNames, name)];
+				return variableValues[locallity][getIndexOf(variableNames[locallity], name)];
 			}
-			catch (Exception i){
-				return null;
-			}
+			catch (Exception e){}
+			locallity--;
 		}
+		return null;
 	}
 	
 	// CODE FOR EMULATING FUNCTIONS
@@ -676,6 +1111,18 @@ public class SatelliteCode {
 		SerialPrint(message);
 	}
 	
+	private void SerialPrint(byte[] data){
+		int x = 0;
+		while (x < data.length){
+			Globals.writeToSerial(data[x], 's');
+			try {
+				Thread.sleep((int)(20 / Globals.getTimeScale()));
+			} catch (Exception e) {}
+		}
+	}
+	private boolean evaluateBool(String bool){
+		return false;
+	}
 	
 	// SUPPORT FUNCTIONS
 	
@@ -734,5 +1181,6 @@ public class SatelliteCode {
 		}
 		return -1;
 	}
+
 	
 }
