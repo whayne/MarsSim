@@ -665,7 +665,7 @@ public class SatelliteCode {
 					}
 					bool += line.charAt(x);
 				}
-				boolean cont = evaluateBool(bool);
+				boolean cont = evaluateBool(bool, bracketsInside);
 			}
 			else if (beginsWith.equals("while")){
 				
@@ -911,7 +911,6 @@ public class SatelliteCode {
 		}		
 	}
 	
-	
 	public void runCode(){
 		while (true){
 			interpretFile(CodeFile);
@@ -921,9 +920,6 @@ public class SatelliteCode {
 		}
 	}
 	
-	
-	
-	// CODE FOR INTPERETTING
 	
 	// CODE FOR TRANSLATING INO CODE
 	
@@ -1120,7 +1116,14 @@ public class SatelliteCode {
 			} catch (Exception e) {}
 		}
 	}
-	private boolean evaluateBool(String bool){
+	
+	private boolean evaluateBool(String bool, int locallity){
+		if (getStartsWith(bool).equals("strcmp")){
+			//compareing strings
+		}
+		else if (contains(bool, "(")){
+			//must handle paraethesis first
+		}
 		return false;
 	}
 	
