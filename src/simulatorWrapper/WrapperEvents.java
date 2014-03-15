@@ -21,7 +21,7 @@ public class WrapperEvents {
 				Thread.sleep(500);
 			} catch (Exception e) {}
 			satelliteMock.SatelliteEvents.StartCode();
-			//roverMock.RoverEvents.StartCode();
+			roverMock.RoverEvents.StartCode();
 		}
 	}
 	

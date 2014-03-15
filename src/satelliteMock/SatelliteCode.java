@@ -473,8 +473,7 @@ public class SatelliteCode {
 				}
 				continue;
 			}
-			if (looping){
-				System.out.println(line);
+			else if (looping){
 				if (contains(line,  "}")){
 					if (bracketsInside - 1 == whileBracketClose){
 						bracketsInside--;
@@ -760,6 +759,31 @@ public class SatelliteCode {
 					String value = getVariableValue(line);
 					Class type = null;
 					int locallity = bracketsInside;
+					int t = 0;
+					if (contains(beginsWith, "[")){
+						while (beginsWith.charAt(t) != '['){
+							t++;
+						}
+						t++;
+						String numb = "";
+						while (beginsWith.charAt(t) != ']'){
+							numb += beginsWith.charAt(t);
+							t++;
+						}
+						try {
+							Integer.parseInt(numb);
+						}
+						catch (Exception e){ //Array call is a variable
+							int call = (int)getStoredValue(numb, locallity);
+							String newBegins = "";
+							t = 0;
+							while (beginsWith.charAt(t) != '['){
+								newBegins += beginsWith.charAt(t);
+								t++;
+							}
+							beginsWith = newBegins + "[" + call + "]";
+						}
+					}
 					while (locallity >= 0){
 						try {
 							type = variableTypes[locallity][getIndexOf(variableNames[locallity], beginsWith)];
@@ -787,7 +811,7 @@ public class SatelliteCode {
 							if (value.length() == 3){
 								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = value.charAt(1);
 							}
-							else {
+							else if (value.length() == 4){
 								switch (value.charAt(2)){
 								case '0':
 									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\0';
@@ -803,9 +827,11 @@ public class SatelliteCode {
 									break;
 								}
 							}
+							else {
+								t = 3/0;
+							}
 						}
 						catch (Exception e){
-							e.printStackTrace();
 							try {
 								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
 							}
@@ -830,7 +856,12 @@ public class SatelliteCode {
 							int length = ((String)variableValues[locallity][getIndexOf(variableNames[locallity], strName)]).length();
 							x = 0;
 							while (x < length){
-								storeVal += (char)getStoredValue(strName + "[" + x + "]", locallity);
+								try {
+									storeVal += (char)getStoredValue(strName + "[" + x + "]", locallity);
+								}
+								catch (Exception e){
+									storeVal += (char)(byte)getStoredValue(strName + "[" + x + "]", locallity);
+								}
 								x++;
 							}
 							variableValues[locallity][getIndexOf(variableNames[locallity], strName)] = storeVal;
@@ -903,7 +934,9 @@ public class SatelliteCode {
 					else {
 						variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = value;
 					}
-				} catch (Exception e) {} // If the 'variable' hasn't been declared
+				} catch (Exception e) {
+					e.printStackTrace();
+				} // If the 'variable' hasn't been declared
 			}
 			else if (beginsWith.equals("delay")){
 				try {
@@ -1170,7 +1203,9 @@ public class SatelliteCode {
 		char[] output = msg.toCharArray();
 		int x = 0;
 		while (x < output.length){
-			Globals.writeToSerial(output[x], 's'); // Write to Serial one char at a time
+			if (output[x] != '\0'){
+				Globals.writeToSerial(output[x], 's'); // Write to Serial one char at a time
+			}
 			try {
 				Thread.sleep((int)(20 / Globals.getTimeScale())); // Pause for sending
 			} catch (InterruptedException e) {}
@@ -1423,7 +1458,12 @@ public class SatelliteCode {
 							return (char)(byte)firstval == (char)secondval;
 						}
 						catch (Exception ex){
-							return (char)firstval == (char)(byte)secondval;
+							try {
+								return (char)firstval == (char)(byte)secondval;
+							}
+							catch (Exception exc){
+								return (byte)firstval == (byte)secondval;
+							}
 						}
 					}
 				}
