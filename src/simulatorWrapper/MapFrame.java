@@ -86,19 +86,24 @@ public class MapFrame extends JFrame {
 				switch (key) {
 				case 39:
 					PlasmaMap.setLocation(PlasmaMap.getX() - 10, PlasmaMap.getY());
+					RoverMarker.setAngle(0);
 					break;
 				case 37:
 					PlasmaMap.setLocation(PlasmaMap.getX() + 10, PlasmaMap.getY());
+					RoverMarker.setAngle(180);
 					break;
 				case 38:
 					PlasmaMap.setLocation(PlasmaMap.getX(), PlasmaMap.getY() + 10);
+					RoverMarker.setAngle(90);
 					break;
 				case 40:
 					PlasmaMap.setLocation(PlasmaMap.getX(), PlasmaMap.getY() - 10);
+					RoverMarker.setAngle(270);
 					break;
 				}
 			}
 		});
+		
 	}
 	
 	private void resized(){
