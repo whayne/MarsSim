@@ -29,10 +29,10 @@ public class RoverCode {
 		if (Globals.RFAvailable('r') > 0){   
 		    if ((char)Globals.ReadSerial('r') == 'r'){  
 		    	Thread.sleep((int)(500 / Globals.getTimeScale()));
-			    System.out.println("here");
-		    	Globals.ReadSerial('r');
+			    Globals.ReadSerial('r');
 			    tag = (char)Globals.ReadSerial('r');
 			    if (Globals.RFAvailable('r') > 0) {
+			    	System.out.println("more available");
 			    	data[0] = tag;
 			    	index++;
 			    	while (Globals.RFAvailable('r') > 0){

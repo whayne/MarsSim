@@ -13,7 +13,6 @@ public class WrapperEvents {
 	}
 	
 	private static int windows = 0;
-	
 	public static void WindowOpened(){
 		windows++;
 		if (windows == 3){

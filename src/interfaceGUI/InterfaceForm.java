@@ -91,7 +91,7 @@ public class InterfaceForm extends JFrame {
 		addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentMoved(ComponentEvent arg0) {
-				//frame.setLocation(FrameLocation);
+				frame.setLocation(FrameLocation);
 			}
 		});
 		addWindowListener(new WindowAdapter() {
