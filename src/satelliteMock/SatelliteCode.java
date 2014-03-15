@@ -29,7 +29,13 @@ public class SatelliteCode {
 		JFileChooser browse = new JFileChooser();
 		browse.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Arduino Code", "ino"));
 		browse.showOpenDialog(GUI);
-		String filepath = browse.getSelectedFile().getAbsolutePath();
+		String filepath;
+		try {
+			filepath = browse.getSelectedFile().getAbsolutePath();
+		}
+		catch (Exception e){
+			filepath = "";
+		}
 		GUI.FileLocationTxt.setText(filepath);
 		newFileConnected();
 	}
@@ -165,7 +171,7 @@ public class SatelliteCode {
 									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value.charAt(1));
 								}
 								else {
-									switch (value.charAt(3)){
+									switch (value.charAt(2)){
 									case '0':
 										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\0');
 										break;
@@ -284,7 +290,7 @@ public class SatelliteCode {
 									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = value.charAt(1);
 								}
 								else {
-									switch (value.charAt(3)){
+									switch (value.charAt(2)){
 									case '0':
 										variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\0';
 										break;
@@ -434,6 +440,12 @@ public class SatelliteCode {
 		variableValues[1] = new Object[0];
 		int bracketsInside = 0;
 		
+		int ifBracketClose = 0;
+		boolean skipping = false;
+		int whileLineStart = 0;
+		int whileBracketClose = 0;;
+		boolean looping = false;
+		
 		int i = 0;
 		while (i < ino.length){
 			i++;
@@ -448,6 +460,29 @@ public class SatelliteCode {
 			if (beginsWith.equals("{")){
 				bracketsInside++;
 				continue;
+			}
+			if (skipping){
+				if (contains(line, "{")){
+					bracketsInside++;
+				}
+				if (this.contains(line, "}")){
+					bracketsInside--;
+					if (bracketsInside == ifBracketClose){
+						skipping = false;
+					}
+				}
+				continue;
+			}
+			if (looping){
+				System.out.println(line);
+				if (contains(line,  "}")){
+					if (bracketsInside - 1 == whileBracketClose){
+						bracketsInside--;
+						i = whileLineStart;
+						looping = false;
+						continue;
+					}
+				}
 			}
 			
 			if (lineIsVariableDec(line)){ // A variable is declared
@@ -558,7 +593,7 @@ public class SatelliteCode {
 								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value.charAt(1));
 							}
 							else {
-								switch (value.charAt(3)){
+								switch (value.charAt(2)){
 								case '0':
 									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\0');
 									break;
@@ -655,20 +690,70 @@ public class SatelliteCode {
 				}
 				x++;
 				String bool = "";
-				int inside = 0;
-				while (line.charAt(x) != ')' && inside != 0){
+				int inside = 1;
+				while (true){
 					if (line.charAt(x) == '('){
 						inside++;
 					}
 					if (line.charAt(x) == ')'){
 						inside--;
+						if (inside == 0){
+							break;
+						}
 					}
 					bool += line.charAt(x);
+					x++;
 				}
 				boolean cont = evaluateBool(bool, bracketsInside);
+				if (!cont){
+					skipping = true;
+					ifBracketClose = bracketsInside;
+					if (contains(line, "{")){
+						bracketsInside++;
+					}
+					continue;
+				}
 			}
 			else if (beginsWith.equals("while")){
-				
+				int x = 0;
+				while (line.charAt(x) != '('){
+					x++;
+				}
+				x++;
+				String bool = "";
+				int inside = 1;
+				while (true){
+					if (line.charAt(x) == '('){
+						inside++;
+					}
+					if (line.charAt(x) == ')'){
+						inside--;
+						if (inside == 0){
+							break;
+						}
+					}
+					bool += line.charAt(x);
+					x++;
+				}
+				boolean cont = evaluateBool(bool, bracketsInside);
+				if (!cont){ //if false looks like an if
+					skipping = true;
+					looping = false;
+					ifBracketClose = bracketsInside;
+					if (contains(line, "{")){
+						bracketsInside++;
+					}
+					continue;
+				}
+				else {
+					whileLineStart = i - 1;
+					whileBracketClose = bracketsInside;
+					if (contains(line, "{")){
+						bracketsInside++;
+					}
+					looping = true;
+					continue;
+				}
 			}
 			else if (contains(line, "=")){
 				try {
@@ -703,7 +788,7 @@ public class SatelliteCode {
 								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = value.charAt(1);
 							}
 							else {
-								switch (value.charAt(3)){
+								switch (value.charAt(2)){
 								case '0':
 									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\0';
 									break;
@@ -760,8 +845,7 @@ public class SatelliteCode {
 								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
 							}
 							catch (Exception ex){
-								// TODO code to analyze boolean, should exist later for if and while
-								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = false;
+								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = evaluateBool(value, locallity);
 							}
 						}
 					}
@@ -897,10 +981,7 @@ public class SatelliteCode {
 						}
 					}
 				}
-			}
-			
-			
-			
+			}			
 			if (contains(line, "{")){
 				bracketsInside++;
 			}
@@ -963,6 +1044,9 @@ public class SatelliteCode {
 	}
 	
 	private String getStartsWith(String line){
+		if (line.length() == 0){
+			return "";
+		}
 		String out = "";
 		char[] chars = line.toCharArray();
 		int x = 0;
@@ -1118,11 +1202,253 @@ public class SatelliteCode {
 	}
 	
 	private boolean evaluateBool(String bool, int locallity){
+		try {
 		if (getStartsWith(bool).equals("strcmp")){
-			//compareing strings
+			// Get the 2 terms
+			int x = 0;
+			while (bool.charAt(x) != '('){
+				x++;
+			}
+			x++;
+			while (bool.charAt(x) == ' '){
+				x++;
+			}
+			String first = "";
+			while (bool.charAt(x) != ','){
+				first += bool.charAt(x);
+				x++;
+			}
+			x++;
+			while (bool.charAt(x) == ' '){
+				x++;
+			}
+			String second = "";
+			while (bool.charAt(x) != ' ' && bool.charAt(x) != ')'){
+				second += bool.charAt(x);
+				x++;
+			}
+			//Get the term values
+			if (first.charAt(0) == '\"'){//Is a string
+				first = removeChar(first, '\"');
+			}
+			else {//Is a variable
+				first = (String)getStoredValue(first, locallity);
+			}
+			if (second.charAt(0) == '\"'){
+				second = removeChar(second, '\"');
+			}
+			else {
+				second = (String)getStoredValue(second, locallity);
+			}
+			//Check
+			return first.equals(second);
 		}
-		else if (contains(bool, "(")){
-			//must handle paraethesis first
+		//else if (getStartsWith(bool).length() == bool.length()){//one term
+		//	if (bool.equals("true")){
+		//		return true;
+		//	}
+		//	else if (bool.equals("false")){
+		//		return false;
+		//	}
+		//	else {
+		//		return (boolean)getStoredValue(bool, locallity);
+		//	}
+		//}
+		else if (contains(bool, "(") && !contains(bool, "()")){//must handle paraethesis first but not functions
+			String[] bools = new String[0];
+			String[] operations = new String[0];
+			int x = 0;
+			int y = 0;
+			while (x < bool.length()){
+				if (bool.charAt(x) == '('){
+					bools = Augment(bools, "");
+				}
+				else if (bool.charAt(x) == ')'){
+					operations = Augment(operations, "");
+					y++;
+				}
+				else {
+					try {
+						bools[y] += bool.charAt(x);
+					}
+					catch (Exception e){
+						if (bool.charAt(x) != ' '){
+							operations[y - 1] += bool.charAt(x);
+						}
+					}
+				}
+				x++;
+			}
+			boolean[] values = new boolean[bools.length];
+			x = 0;
+			while (x < values.length){
+				values[x] = evaluateBool(bools[x], locallity);
+				x++;
+			}
+			boolean standing;
+			switch (operations[0]){
+			case "&&":
+				standing = values[0] && values[1];
+				break;
+			case "||":
+				standing = values[0] || values[1];
+				break;
+			default:
+				standing = false;
+				break;
+			}
+			x = 1;
+			while (x < values.length - 1){
+				switch (operations[x]){
+				case "&&":
+					standing = standing && values[x+1];
+					break;
+				case "||":
+					standing = standing || values[x+1];
+					break;
+				default:
+					standing = false;
+					break;
+				}
+				x++;
+			}
+			return standing;
+		}
+		else if (contains(bool, "takePicutre()")){ //catches did picture take
+			return false; //because I have no code to take a picture
+		}
+		else if (contains(bool, "available()") && !contains(bool, "Serial")){ //catches file.available()
+			return true;
+		}
+		else {
+			// get Terms
+			int x= 0;
+			String first = "";
+			while (bool.charAt(x) != ' '){
+				first += bool.charAt(x);
+				x++;
+			}
+			x++;
+			String operation = "";
+			while (bool.charAt(x) != ' '){
+				operation += bool.charAt(x);
+				x++;
+			}
+			x++;
+			String second = "";
+			while (x < bool.length()){
+				second += bool.charAt(x);
+				x++;
+			}
+			//get Values
+			Object firstval = null;
+			Object secondval = null;
+			Class compType = null;
+			if (first.charAt(0) == '\''){//char
+				if (bool.length() == 3){
+					firstval = bool.charAt(1);
+				}
+				else {
+					switch (bool.charAt(2)){
+					case '0':
+						firstval = '\0';
+						break;
+					case 'n':
+						firstval = '\n';
+						break;
+					case '\\':
+						firstval = '\\';
+						break;			
+					case 't':
+						firstval = '\t';
+						break;							
+					}
+				}
+				compType = Character.class;
+			}
+			else if (47 < first.charAt(0) && first.charAt(0) < 58){//int
+				try {
+					firstval = Integer.parseInt(first);
+					compType = Integer.class;
+				}
+				catch (Exception e){
+					return false;
+				}
+			}
+			else { //variable
+				firstval = getStoredValue(first, locallity);
+			}
+			if (second.charAt(0) == '\''){//char
+				if (second.length() == 3){
+					secondval = second.charAt(1);
+				}
+				else {
+					switch (second.charAt(2)){
+					case '0':
+						secondval = '\0';
+						break;
+					case 'n':
+						secondval = '\n';
+						break;
+					case '\\':
+						secondval = '\\';
+						break;			
+					case 't':
+						secondval = '\t';
+						break;							
+					}
+				}
+				compType = Character.class;
+			}
+			else if (47 < second.charAt(0) && second.charAt(0) < 58){//int
+				try {
+					secondval = Integer.parseInt(second);
+					compType = Integer.class;
+				}
+				catch (Exception e){
+					return false;
+				}
+			}
+			else { //variable
+				secondval = getStoredValue(second, locallity);
+			}
+			//System.out.println(first + ":" + firstval + " " + operation + " " + second + ":" + secondval);
+			try {
+				if (compType == Character.class){
+					try {
+						return (char)firstval == (char)secondval;
+					}
+					catch (Exception e){
+						try {
+							return (char)(byte)firstval == (char)secondval;
+						}
+						catch (Exception ex){
+							return (char)firstval == (char)(byte)secondval;
+						}
+					}
+				}
+				else {
+					switch (operation){
+					case "==":
+						return (int)firstval == (int)secondval;
+					case "<":
+						return (int)firstval < (int)secondval;
+					case ">":
+						return (int)firstval > (int)secondval;
+					case "<=":
+						return (int)firstval <= (int)secondval;
+					case ">=":
+						return (int)firstval >= (int)secondval;
+					}
+				}
+			}
+			catch (Exception e){ //both variable - no type
+				//TODO code to find variable type and compare
+				e.printStackTrace();
+			}
+		}
+		} catch (Exception e) {
+			//e.printStackTrace();
 		}
 		return false;
 	}
@@ -1159,6 +1485,18 @@ public class SatelliteCode {
 			x++;
 		}
 		out[x] = val;
+		return out;
+	}
+	
+	private String removeChar(String str, char val){
+		String out = "";
+		int x = 0;
+		while (x < str.length()){
+			if (str.charAt(x) != val){
+				out += str.charAt(x);
+			}
+			x++;
+		}
 		return out;
 	}
 	
