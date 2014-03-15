@@ -72,9 +72,6 @@ public class WrapperMain {
 			x++;
 		}
 		GUI.GroundBufferLbl.setText( buildString(input) );
-		GUI.RoverAvailableLbl.setText(rov.length + "");
-		GUI.SatelliteAvailableLbl.setText(sat.length + "");
-		GUI.GroundAvailableLbl.setText(ground.length + "");
 	}
 	
 	public void updateTimeScale(){

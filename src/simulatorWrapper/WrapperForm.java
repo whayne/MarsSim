@@ -29,9 +29,6 @@ public class WrapperForm extends JFrame {
 	JLabel SatelliteBufferLbl;
 	JLabel GroundBufferLbl;
 	JSlider TimeSlider;
-	JLabel RoverAvailableLbl;
-	JLabel SatelliteAvailableLbl;
-	JLabel GroundAvailableLbl;
 
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -96,19 +93,19 @@ public class WrapperForm extends JFrame {
 		RoverBufferLbl = new JLabel("");
 		RoverBufferLbl.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		RoverBufferLbl.setBorder(new LineBorder(new Color(0, 0, 0)));
-		RoverBufferLbl.setBounds(87, 38, 463, 20);
+		RoverBufferLbl.setBounds(87, 38, 489, 20);
 		contentPane.add(RoverBufferLbl);
 		
 		SatelliteBufferLbl = new JLabel("");
 		SatelliteBufferLbl.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		SatelliteBufferLbl.setBorder(new LineBorder(new Color(0, 0, 0)));
-		SatelliteBufferLbl.setBounds(87, 64, 463, 20);
+		SatelliteBufferLbl.setBounds(87, 64, 489, 20);
 		contentPane.add(SatelliteBufferLbl);
 		
 		GroundBufferLbl = new JLabel("");
 		GroundBufferLbl.setFont(new Font("Tahoma", Font.PLAIN, 13));
 		GroundBufferLbl.setBorder(new LineBorder(new Color(0, 0, 0)));
-		GroundBufferLbl.setBounds(87, 89, 463, 20);
+		GroundBufferLbl.setBounds(87, 89, 489, 20);
 		contentPane.add(GroundBufferLbl);
 		
 		JLabel lblTimeRate = new JLabel("Time Rate");
@@ -137,29 +134,5 @@ public class WrapperForm extends JFrame {
 		label.setFont(new Font("Bookman Old Style", Font.PLAIN, 14));
 		label.setBounds(10, 200, 576, 14);
 		contentPane.add(label);
-		
-		RoverAvailableLbl = new JLabel("0");
-		RoverAvailableLbl.setHorizontalAlignment(SwingConstants.CENTER);
-		RoverAvailableLbl.setFont(new Font("Bookman Old Style", Font.PLAIN, 14));
-		RoverAvailableLbl.setBounds(560, 37, 23, 23);
-		contentPane.add(RoverAvailableLbl);
-		
-		SatelliteAvailableLbl = new JLabel("0");
-		SatelliteAvailableLbl.setHorizontalAlignment(SwingConstants.CENTER);
-		SatelliteAvailableLbl.setFont(new Font("Bookman Old Style", Font.PLAIN, 14));
-		SatelliteAvailableLbl.setBounds(560, 62, 23, 23);
-		contentPane.add(SatelliteAvailableLbl);
-		
-		GroundAvailableLbl = new JLabel("0");
-		GroundAvailableLbl.setHorizontalAlignment(SwingConstants.CENTER);
-		GroundAvailableLbl.setFont(new Font("Bookman Old Style", Font.PLAIN, 14));
-		GroundAvailableLbl.setBounds(560, 87, 23, 23);
-		contentPane.add(GroundAvailableLbl);
-		
-		JLabel lblAvailable = new JLabel("Available:");
-		lblAvailable.setHorizontalAlignment(SwingConstants.TRAILING);
-		lblAvailable.setFont(new Font("Bookman Old Style", Font.PLAIN, 12));
-		lblAvailable.setBounds(519, 20, 67, 14);
-		contentPane.add(lblAvailable);
 	}
 }
