@@ -10,11 +10,13 @@ import javax.swing.border.EmptyBorder;
 import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import javax.swing.JTextArea;
 
 public class RoverForm extends JFrame {
 
 	static RoverForm frame;
 	private JPanel contentPane;
+	JTextArea SerialHistoryLbl;
 
 	/**
 	 * Launch the application.
@@ -51,8 +53,13 @@ public class RoverForm extends JFrame {
 		setBounds(100, 100, 450, 300);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
+		contentPane.setLayout(new BorderLayout(0, 0));
+		
+		SerialHistoryLbl = new JTextArea();
+		SerialHistoryLbl.setOpaque(false);
+		SerialHistoryLbl.setEditable(false);
+		contentPane.add(SerialHistoryLbl, BorderLayout.CENTER);
 	}
 
 }

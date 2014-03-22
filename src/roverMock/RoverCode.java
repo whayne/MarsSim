@@ -13,10 +13,23 @@ public class RoverCode {
 	private char[] filename;
 	private boolean connection = false;
 	private boolean mute = false;
+	boolean hasInstructions = false;
+	int instructsComplete = 0;
+	long timeSinceCmd = 0;
+	boolean waiting = false;
+	long waitTime = 0;
+	
+
+	float boardVoltage = 0;
+	float motorVoltage = 0;
+	float armVoltage = 0;
+	float R1 = 10000.0f;
+	float R2 = 3300.0f;
 	
 	private char tag = '\0';
 	private char[] data = new char[20];
 	private int index = 0;
+	boolean go = true;
 	
 	static void align(){
 		GUI = RoverForm.frame;
@@ -26,130 +39,245 @@ public class RoverCode {
 		while (true){
 		System.out.print(""); // Don't know why but fails without this.
 		try {
-		if (Globals.RFAvailable('r') > 0){   
-		    if ((char)Globals.ReadSerial('r') == 'r'){  
-		    	Thread.sleep((int)(500 / Globals.getTimeScale()));
-			    System.out.println("here");
-		    	Globals.ReadSerial('r');
-			    tag = (char)Globals.ReadSerial('r');
-			    if (Globals.RFAvailable('r') > 0) {
-			    	data[0] = tag;
-			    	index++;
-			    	while (Globals.RFAvailable('r') > 0){
-			    		data[index] = (char)Globals.ReadSerial('r');
-			          	index++;
-			        }
-			        while (index < 20){
-			        	data[index] = '\0';
-			        	index++;
-			        }        
-			        sendSerial("s r %");
-			        if (data.equals("move")){
-			          //motor1->run(FORWARD);
-			          //motor2->run(FORWARD);
-			          //motor3->run(FORWARD);
-			          //motor4->run(FORWARD);
-			          //delay(1000); //For ir sensor testing
-			        }        
-			        else if (data.equals("stop")){
-			          //motor1->run(RELEASE);
-			          //motor2->run(RELEASE);
-			          //motor3->run(RELEASE);
-			          //motor4->run(RELEASE); 
-			        }
-			        else if (data.equals("spin_ccw")) {
-			          //motor1->run(BACKWARD);
-			          //motor2->run(BACKWARD);
-			          //motor3->run(FORWARD);
-			          //motor4->run(FORWARD);
-			        }
-			        else if (data.equals("spin_cw")) {
-			          //motor1->run(FORWARD);
-			          ///motor2->run(FORWARD);
-			          //motor3->run(BACKWARD);
-			          //motor4->run(BACKWARD); 
-			        }
-			        else if (data.equals("backward")) {
-			          //motor1->run(BACKWARD);
-			          //motor2->run(BACKWARD);
-			          //motor3->run(BACKWARD);
-			          //motor4->run(BACKWARD); 
-			        }
-			        else if (data.equals("photo")) {
-			          /*delay(2000);
-			          sendSerial("s r }");
-			          cam.setImageSize(imageSize);
-			          if (cam.takePicture()){
-			            filename = new char[13];
-			            strcpy(filename, "PIC0000.JPG");
-			            for (int i = 0; i < 100000; i++){
-			              filename[5] = '0' + i/10;
-			              filename[6] = '0' + i%10;
-			              if (! SD.exists(filename)){
-			                break;
-			              }
-			            }
-			            
-			            imgFile = SD.open(filename, FILE_WRITE);
-			            uint16_t jpglen = cam.frameLength();
-			            byte wCount = 0; // For counting # of writes
-			            while (jpglen > 0) {
-			              // read 32 bytes at a time;
-			              uint8_t *buffer;
-			              uint8_t bytesToRead = min(32, jpglen); // change 32 to 64 for a speedup but may not work with all setups!
-			              buffer = cam.readPicture(bytesToRead);
-			              imgFile.write(buffer, bytesToRead);
-			              if(++wCount >= 64) { // Every 2K, give a little feedback so it doesn't appear locked up
-			                wCount = 0;
-			              }
-			              jpglen -= bytesToRead;
-			            }
-			            imgFile.close();
-			            
-			            Serial.print("s c [o]");
-			            delay(1000);
-			            delay(1000);
-			            myFile = SD.open(filename, FILE_READ);
-			            if (myFile) {
-			              // read from the file until there's nothing else in it:
-			              while (myFile.available()) {
-			      	        index = 0;
-			                while (index < 60 && myFile.available()){
-			                  sendSerial((char)myFile.read());
-			                  index++;
-			                }
-			                delay(2000);
-			              }
-			              // close the file:
-			              myFile.close();
-			              cam.begin();
-			              cam.setImageSize(imageSize);
-			            }
-			          }
-			          else {
-			            delay(1000);
-			            Serial.print("s r n Picture failed to take.");
-			          }*/
-			        }
-			      }
-			      else if (tag == '#'){
-			    	  //Satilite Confirmation
-			      }
-			      else if (tag == '^'){
-			    	  connection = true;
-			    	  sendSerial("s r ^");
-			      }
-			      else if (tag == '}'){
-			    	  mute = true;
-			      }
-			      else if (tag == '{'){
-			    	  mute = false;
-			      }
-			      data = new char[20];
-			      index = 0;
-			      tag = '\0';
+			/*for (pos = 0; pos < 180; pos += 1) {
+		    pan.write(pos);
+		    delay(100);
+		  }
+		  for (pos = 180; pos>= 1; pos -=1) {
+		    pan.write(pos);
+		    delay(100);
+		  }*/
+		   
+		  /*if (digitalRead(button) == HIGH) {
+		    sendSerial("s r n TESTING");
+		    digitalWrite(LED, HIGH);
+		    delay(500);
+		    digitalWrite(LED, LOW);
+		  }*/
+			
+		  if (Globals.RFAvailable('r') > 0){   
+		    if (Globals.ReadSerial('r') == 'r' && go){  
+		      delay(500);
+		      Globals.ReadSerial('r');
+		      tag = (char) Globals.ReadSerial('r');
+		      if (Globals.RFAvailable('r') > 0) {
+		        data[0] = tag;
+		        index++;
+		        while (Globals.RFAvailable('r') > 0){
+		          data[index] = (char) Globals.ReadSerial('r');
+		          index++;
+		        }
+		        data[index] = '\0';
+		        if (strcmp(data, "move") == 0){
+		          sendSerial("s r %");
+		          /*motor1->run(FORWARD);
+		          motor2->run(FORWARD);
+		          motor3->run(FORWARD);
+		          motor4->run(FORWARD);
+		          delay(1000); //For ir sensor testing*/
+		        }        
+		        else if (strcmp(data, "stop") == 0){
+		          sendSerial("s r %");
+		          /*motor1->run(RELEASE);
+		          motor2->run(RELEASE);
+		          motor3->run(RELEASE);
+		          motor4->run(RELEASE); */
+		        }
+		        else if (strcmp(data, "spin_ccw") == 0) {
+		          sendSerial("s r %");
+		          /*motor1->run(BACKWARD);
+		          motor2->run(BACKWARD);
+		          motor3->run(FORWARD);
+		          motor4->run(FORWARD);*/
+		        }
+		        else if (strcmp(data, "spin_cw") == 0) {
+		          sendSerial("s r %");
+		          /*motor1->run(FORWARD);
+		          motor2->run(FORWARD);
+		          motor3->run(BACKWARD);
+		          motor4->run(BACKWARD);*/ 
+		        }
+		        else if (strcmp(data, "backward") == 0) {
+		          sendSerial("s r %");
+		          /*motor1->run(BACKWARD);
+		          motor2->run(BACKWARD);
+		          motor3->run(BACKWARD);
+		          motor4->run(BACKWARD);*/ 
+		        }
+		        else if (strcmp(data, "getvolts") == 0) {
+		          sendSerial("s r %");
+		          //updateVoltages();
+		          delay(2000);
+		          sendSerial("s r Vrov=");
+		          sendSerial(boardVoltage);
+		          delay(2500);
+		          sendSerial("s r Vmtr=");
+		          sendSerial(motorVoltage);
+		          delay(2500);
+		          sendSerial("s r Varm=");
+		          sendSerial(armVoltage);
+		        }
+		        else if (strcmp(data, "photo") == 0) {
+		          sendSerial("s r %");
+		          delay(2000);
+		          //takePicture();
+		        }
+		        else if (strcmp(data, "instructions") == 0){
+		          /*if (SD.exists("instruct.txt")){
+		            SD.remove("instruct.txt");
+		          }
+		          myFile = SD.open("instruct.txt", FILE_WRITE);
+		          while (Globals.RFAvailable('r') == 0) {}
+		          delay(1000);
+		          while (Globals.RFAvailable('r') > 0){
+		            while (Globals.RFAvailable('r') > 0){
+		              myFile.write(Globals.ReadSerial('r'));
+		            }
+		            delay(2000);
+		          }
+		          myFile.close();
+		          sendSerial("s r {");
+		          delay(1000);
+		          sendSerial("s r n Instructions Transfered");
+		          hasInstructions = true;
+		          instructsComplete = 0;
+		        }*/
+		      }
+		      else if (tag == '#'){
+		        //Satilite Confirmation
+		      }
+		      else if (tag == '^'){
+		        connection = true;
+		        sendSerial("s r ^");
+		      }
+		      else if (tag == '}'){
+		        mute = true;
+		        //digitalWrite(muteLED, HIGH);
+		      }
+		      else if (tag == '{'){
+		        mute = false;
+		        //digitalWrite(muteLED, LOW);
+		      }
+		      data = new char[30];
+		      index = 0;
+		      tag = '\0';
+		      timeSinceCmd = System.currentTimeMillis();
 		    }
-		}
+		    else {
+		      delay(500);
+		      go = false;
+		      while (Globals.RFAvailable('r') > 0){
+		        Globals.ReadSerial('r');
+		      }
+		    }  
+		  }
+		  else {
+		    go = true;
+		  }
+		  
+		  if (waiting){
+		    if (System.currentTimeMillis() - waitTime < 1000){}
+		    else {
+		      waiting = false;
+		    }
+		  }
+		  else if (System.currentTimeMillis() - timeSinceCmd > 60000 && hasInstructions && !mute){
+		     /*digitalWrite(instructLED, HIGH);
+		     myFile = SD.open("instruct.txt", FILE_READ);
+		     char* cmd;
+		     int x = 0;
+		     int count = 0;
+		     while (count <= instructsComplete){
+		       cmd = new char[20];
+		       x = 0;
+		       while (myFile.peek() != '\n'){
+		         cmd[x] = myFile.read();
+		         x++;
+		       }
+		       cmd[x] = '\0';
+		       myFile.read();
+		       count++;
+		     }
+		      
+		     if (cmd[0] == 'r'){
+		       x = 0;
+		       while (x < strlen(cmd)-2){
+		         cmd[x] = cmd[x+2];
+		         x++;
+		       }
+		       cmd[x] = '\0';
+		       if (strcmp(cmd, "move") == 0){
+		          motor1->run(FORWARD);
+		          motor2->run(FORWARD);
+		          motor3->run(FORWARD);
+		          motor4->run(FORWARD);
+		       }
+		       else if (strcmp(cmd, "backward") == 0){
+		          motor1->run(BACKWARD);
+		          motor2->run(BACKWARD);
+		          motor3->run(BACKWARD);
+		          motor4->run(BACKWARD); 
+		       }
+		       else if (strcmp(cmd, "spin_cw") == 0){
+		          motor1->run(FORWARD);
+		          motor2->run(FORWARD);
+		          motor3->run(BACKWARD);
+		          motor4->run(BACKWARD); 
+		       }
+		       else if (strcmp(cmd, "spin_ccw") == 0){
+		          motor1->run(BACKWARD);
+		          motor2->run(BACKWARD);
+		          motor3->run(FORWARD);
+		          motor4->run(FORWARD);
+		       }
+		       else if (strcmp(cmd, "stop") == 0){
+		          motor1->run(RELEASE);
+		          motor2->run(RELEASE);
+		          motor3->run(RELEASE);
+		          motor4->run(RELEASE);
+		       }
+		       else if (strcmp(cmd, "photo") == 0){
+		         takePicture();
+		       }
+		       else if (strcmp(cmd, "delay1") == 0){
+		         waiting = true;
+		         waitTime = millis();
+		       }
+		       else if (strcmp(cmd, "report") == 0){
+		         if (sendSerial("s r n Rover Instructs Done")) {
+		           hasInstructions = false;
+		           instructsComplete = 0;
+		         }
+		         else {
+		           instructsComplete--;
+		         }
+		       }
+		     }
+		     instructsComplete++;
+		     myFile.close();*/
+		  }
+		  else {
+		    //digitalWrite(instructLED, LOW);
+		  }
+		    
+		  /*double volt1 = (analogRead(irPin1));
+		  double distance1 = 8054.2 / ( pow ( volt1, .94 ) );
+		  double volt2 = (analogRead(irPin2));
+		  double distance2 = 8054.2 / ( pow (volt2, .94) );
+		  
+		  if (distance1 < 50  || distance2 < 50) {  
+		   tries = tries + 1;
+		  }
+		  else tries = 0;
+		  
+		  if (tries > 1) {
+		  //sendSerial("s r n" distance1);
+		  motor1->run(RELEASE);
+		  motor2->run(RELEASE);
+		  motor3->run(RELEASE);
+		  motor4->run(RELEASE); 
+		  delay(1000);*/
+		  }
 		} catch (Exception e) {
 			System.out.println("Error in Rover Run Code");
 		}
@@ -170,17 +298,53 @@ public class RoverCode {
 				} catch (InterruptedException e) {}
 				x++;
 			}
+			GUI.SerialHistoryLbl.setText(GUI.SerialHistoryLbl.getText() + mess + "\t\t\t" + (System.currentTimeMillis()-Globals.startTimeMillis) + "\n");
 			return true;
 		}
-		return false;
+		else {
+			GUI.SerialHistoryLbl.setText(GUI.SerialHistoryLbl.getText() + "Surpressed: " + mess + "\t\t" + (System.currentTimeMillis()-Globals.startTimeMillis) + "\n");
+			return false;
+		}
+	}
+	
+	boolean sendSerial(float val){
+		return sendSerial(val + "");
 	}
 
 	boolean sendSerial(char mess){
 		if (!mute){
 			Globals.writeToSerial(mess, 'r');
+			GUI.SerialHistoryLbl.setText(GUI.SerialHistoryLbl.getText() + mess + "\t\t\t\t" + (System.currentTimeMillis()-Globals.startTimeMillis) + "\n");
 			return true;
 		}
-		return false;
+		else {
+			GUI.SerialHistoryLbl.setText(GUI.SerialHistoryLbl.getText() + "Supressed: " + mess + "\t\t\t" + (System.currentTimeMillis()-Globals.startTimeMillis) + "\n");
+			return false;
+		}
 	}
 	
+	private void delay(int length){
+		try {
+			Thread.sleep((int)(length/Globals.getTimeScale()));
+		}
+		catch (Exception e) {}
+	}
+	
+	private int strcmp(char[] first, String second){
+		try {
+			char[] sec = second.toCharArray();
+			int count = 0;
+			int x = 0;
+			while (first[x] != '\0'){
+				if (first[x] != sec[x]){
+					return 1;
+				}
+				x++;
+			}
+			return 0;
+		}
+		catch (Exception e){
+			return 1;
+		}
+	}
 }

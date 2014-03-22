@@ -13,1555 +13,343 @@ import objects.ThreadTimer;
 public class SatelliteCode {
 
 	static SatelliteForm GUI = new SatelliteForm();
-	private String[] CodeFile = new String[0];
-	private boolean hasCode = false;
-	
-	String[][] variableNames = new String[15][0];
-	Object[][] variableValues = new Object[15][0];
-	Class[][] variableTypes = new Class[15][0];
-	
+
 	static void align(){
 		GUI = SatelliteForm.frame;
 	}
 	
-	// Reads in the file
-	public void browseForINOFile(){
-		JFileChooser browse = new JFileChooser();
-		browse.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Arduino Code", "ino"));
-		browse.showOpenDialog(GUI);
-		String filepath;
-		try {
-			filepath = browse.getSelectedFile().getAbsolutePath();
-		}
-		catch (Exception e){
-			filepath = "";
-		}
-		GUI.FileLocationTxt.setText(filepath);
-		newFileConnected();
-	}
-	
-	//figures out the global variables and defines the loop function
-	public void newFileConnected(){
-		if (GUI.FileLocationTxt.getText().equals("")){
-			return;
-		}
-		try {
-			Scanner file = new Scanner(new File(GUI.FileLocationTxt.getText()));
-			int bracketsInside = 0;
-			
-			while (file.hasNextLine()){
-				String line = file.nextLine();				
-				if (line.length() < 1){
-					continue; 
-				}
-				String beginsWith = getStartsWith(line);
-				if (beginsWith.equals("") || beginsWith.equals("//") || beginsWith.equals("#") || beginsWith.equals("digitalWrite")){
-					continue;
-				}
-				if (beginsWith.equals("{")){
-					bracketsInside++;
-					continue;
-				}
-				
-				if (lineIsVariableDec(line)){ // A variable is declared
-					String type = getVariableType(line);
-					String name = getVariableName(line);
-					String value = getVariableValue(line);
-					if (contains(type, "*")){ // Is an array
-						if (getStartsWith(type).equals("char")){ //Is a String
-							int x = 0;
-							if (contains(value, "\"")){
-								while (value.charAt(x) != '\"'){
-									x++;
-								}
-								x++;
-								String storeVal = "";
-								while (value.charAt(x) != '\"'){
-									storeVal += value.charAt(x);
-									x++;
-								}
-								variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name);
-								variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], String.class);
-								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], storeVal);
-								x = 0;
-								while (x < storeVal.length()){
-									variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name + "[" + x + "]");
-									variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Character.class);
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], storeVal.charAt(x));
-									x++;
-								}
-							}
-							else {
-								String prelength = "";
-								while (value.charAt(x) != '['){
-									x++;
-								}
-								x++;
-								while (value.charAt(x) != ']'){
-									prelength += value.charAt(x);
-									x++;
-								}
-								int length = Integer.parseInt(prelength);
-								variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name);
-								variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], String.class);
-								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], "");
-								prelength = ""; // recycling
-								x = 0;
-								while (x < length){
-									variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name + "[" + x + "]");
-									variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Character.class);
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\0');
-									prelength += '\0';
-									x++;
-								}
-								variableValues[bracketsInside][getIndexOf(variableNames[bracketsInside], name)] = prelength;
-							}
-						}
-						else { // Is something else
-							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Object.class);
-							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value);
-						}
-					}
-					else { // Is not an array
-						variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name);
-						if (type.equals("int")){
-							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Integer.class);
-							try {
-								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], Integer.parseInt(value));
-							}
-							catch (Exception e){
-								try {
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
-								}
-								catch (Exception i){
-									if (value.equals("")){
-										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
-									}
-									else {
-										// TODO code to handle math operations in initalization
-										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], 0);
-									}
-								}
-							}
-						}
-						else if (type.equals("boolean")){
-							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Boolean.class);
-							try {
-								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], Boolean.parseBoolean(value));
-							}
-							catch (Exception e){
-								try {
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
-								}
-								catch (Exception i){
-									if (value.equals("")){
-										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
-									}
-									else {
-										// TODO code to analyze boolean, should exist later for if and while
-										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], false);
-									}
-								}
-							}
-						}
-						else if (type.equals("char")){
-							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Character.class);
-							try {
-								if (value.length() == 3){
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value.charAt(1));
-								}
-								else {
-									switch (value.charAt(2)){
-									case '0':
-										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\0');
-										break;
-									case 'n':
-										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\n');
-										break;
-									case '\\':
-										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\\');
-										break;				
-									case 't':
-										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\t');
-										break;						
-									}
-								}
-							}
-							catch (Exception e){
-								try {
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
-								}
-								catch (Exception i){
-									if (value.equals("Serial.read()")){
-										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], (char)Globals.ReadSerial('s'));
-									}
-									else {
-										// I don't think there is anyother way to initalize this
-										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\0');
-									}
-								}
-							}
-						}
-						else if (type.equals("File")){
-							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], File.class);
-							if (value.equals("")){
-								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
-							}
-							else {
-								String filename = "";
-								boolean string = false;
-								int x = 0;
-								while (value.charAt(x) != '(') {
-									x++;
-								}
-								x++;
-								if (value.charAt(x) == '\"'){
-									string = true;
-									x++;
-								}
-								while (value.charAt(x) != '\"' || value.charAt(x) == ')'){
-									filename += value.charAt(x);
-									x++;
-								}
-								if (string){
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], filename);
-								}
-								else {
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(filename, bracketsInside));
-								}
-							}
-						}
-						else if (type.equals("float")){
-							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Float.class);
-							try {
-								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], Float.parseFloat(value));
-							}
-							catch (Exception e){
-								try {
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
-								}
-								catch (Exception i){
-									if (value.equals("")){
-										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
-									}
-									else {
-										// TODO code for more math operators
-										variableValues[bracketsInside] = Augment(variableValues[bracketsInside], false);
-									}
-								}
-							}
-						}
-						else { // Other object
-							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Object.class);
-							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value);
-						}
-					}
-				}
-				else if (contains(line, "=")){ // Variable value changed
-					try {
-						String value = getVariableValue(line);
-						Class type = null;
-						int locallity = bracketsInside;
-						while (locallity >= 0){
-							try {
-								type = variableTypes[locallity][getIndexOf(variableNames[locallity], beginsWith)];
-								break;
-							}
-							catch (Exception e) {}
-							locallity--;
-						}
-						if (type.equals(Integer.class)){
-							try {
-								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = Integer.parseInt(value);
-							}
-							catch (Exception e){
-								try {
-									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
-								}
-								catch (Exception i){
-									// TODO code to handle math operations in initalization
-									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = 0;
-								}
-							}
-						}
-						else if (type.equals(Character.class)){
-							try {
-								if (value.length() == 3){
-									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = value.charAt(1);
-								}
-								else {
-									switch (value.charAt(2)){
-									case '0':
-										variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\0';
-										break;
-									case 'n':
-										variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\n';
-										break;
-									case '\\':
-										variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\\';
-										break;	
-									case 't':
-										variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\t';
-										break;
-									}
-								}
-							}
-							catch (Exception e){
-								e.printStackTrace();
-								try {
-									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
-								}
-								catch (Exception ex){
-									if (value.equals("Serial.read()")){
-										variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = (char)Globals.ReadSerial('s');
-									}
-									else {
-										// I don't think there is anyother way to initalize this
-										variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\0';
-									}
-								}
-							}
-							if (contains(beginsWith, "[")){
-								String strName = "";
-								int x = 0;
-								while (beginsWith.charAt(x) != '['){
-									strName += beginsWith.charAt(x);
-									x++;
-								}
-								String storeVal = "";
-								int length = ((String)variableValues[locallity][getIndexOf(variableNames[locallity], strName)]).length();
-								x = 0;
-								while (x < length){
-									storeVal += (char)getStoredValue(strName + "[" + x + "]", locallity);
-									x++;
-								}
-								variableValues[locallity][getIndexOf(variableNames[locallity], strName)] = storeVal;
-							}
-						}
-						else if (type.equals(Float.class)){
-							variableTypes[locallity] = Augment(variableTypes[locallity], Float.class);
-							try {
-								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = Float.parseFloat(value);
-							}
-							catch (Exception e){
-								try {
-									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
-								}
-								catch (Exception i){
-									// TODO code for more math operators
-									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = 0.0;
-								}
-							}
-						}
-						else if (type.equals(File.class)){
-							String filename = "";
-							boolean string = false;
-							int x = 0;
-							while (value.charAt(x) != '(') {
-								x++;
-							}
-							x++;
-							if (value.charAt(x) == '\"'){
-								string = true;
-								x++;
-							}
-							while (value.charAt(x) != '\"' || value.charAt(x) == ')'){
-								filename += value.charAt(x);
-								x++;
-							}
-							if (string){
-								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = filename;
-							}
-							else {
-								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(filename, locallity);
-							}
-						}
-						else if (type.equals(String.class)){
-							if (getStartsWith(value).equals("new")){
-								String string = "";
-								int length = ((String)variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)]).length();
-								int x = 0;
-								while (x < length){
-									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith + "[" + x + "]")] = '\0';
-									string += '\0';
-									x++;
-								}
-								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = string;
-							}
-						}
-						else {
-							variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = value;
-						}
-					} catch (Exception e) {} // If the 'variable' hasn't been declared
-				}
-				
-				if (contains(line, "void loop()")){ // Creates the loop function for interpretFile
-					while (!contains(line, "{")) {
-						line = file.nextLine();
-					}
-					bracketsInside = 1;
-					while (bracketsInside > 0){
-						line = file.nextLine();
-						if (contains(line, "{")){
-							bracketsInside++;
-						}
-						if (contains(line, "}")){
-							bracketsInside--;
-						}
-						CodeFile = Augment(CodeFile, line);
-					}
-					break;
-				}				
-				if (contains(line, "{")){
-					bracketsInside++;
-				}
-				if (contains(line, "}")){
-					bracketsInside--;
-					continue;
-				}			
-			}
-			hasCode = true;
-		} 
-		catch (Exception e) {
-			e.printStackTrace();
-			//JOptionPane.showConfirmDialog(GUI, "The File Could Not be found.", "Invalid File", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
-			CodeFile = null;
-			hasCode = false;
-		}		
-	}
-	
-	// Runs the loop method from the file
-	private void interpretFile(String[] ino){
-		if (!hasCode){
-			return;
-		}
-		variableNames[1] = new String[0];
-		variableTypes[1] = new Class[0];
-		variableValues[1] = new Object[0];
-		int bracketsInside = 0;
-		
-		int ifBracketClose = 0;
-		boolean skipping = false;
-		int whileLineStart = 0;
-		int whileBracketClose = 0;;
-		boolean looping = false;
-		
-		int i = 0;
-		while (i < ino.length){
-			i++;
-			String line = ino[i-1];
-			if (line.length() < 1){
-				continue; 
-			}
-			String beginsWith = getStartsWith(line);
-			if (beginsWith.equals("") || beginsWith.equals("//") || beginsWith.equals("#") || beginsWith.equals("digitalWrite")){
-				continue;
-			}
-			if (beginsWith.equals("{")){
-				bracketsInside++;
-				continue;
-			}
-			if (skipping){
-				if (contains(line, "{")){
-					bracketsInside++;
-				}
-				if (this.contains(line, "}")){
-					bracketsInside--;
-					if (bracketsInside == ifBracketClose){
-						skipping = false;
-					}
-				}
-				continue;
-			}
-			else if (looping){
-				if (contains(line,  "}")){
-					if (bracketsInside - 1 == whileBracketClose){
-						bracketsInside--;
-						i = whileLineStart;
-						looping = false;
-						continue;
-					}
-				}
-			}
-			
-			if (lineIsVariableDec(line)){ // A variable is declared
-				String type = getVariableType(line);
-				String name = getVariableName(line);
-				String value = getVariableValue(line);
-				if (contains(type, "*")){ // Is an array
-					if (getStartsWith(type).equals("char")){ //Is a String
-						int x = 0;
-						if (contains(value, "\"")){
-							while (value.charAt(x) != '\"'){
-								x++;
-							}
-							x++;
-							String storeVal = "";
-							while (value.charAt(x) != '\"'){
-								storeVal += value.charAt(x);
-								x++;
-							}
-							variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name);
-							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], String.class);
-							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], storeVal);
-							x = 0;
-							while (x < storeVal.length()){
-								variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name + "[" + x + "]");
-								variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Character.class);
-								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], storeVal.charAt(x));
-								x++;
-							}
-						}
-						else {
-							String prelength = "";
-							while (value.charAt(x) != '['){
-								x++;
-							}
-							x++;
-							while (value.charAt(x) != ']'){
-								prelength += value.charAt(x);
-								x++;
-							}
-							int length = Integer.parseInt(prelength);
-							variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name);
-							variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], String.class);
-							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], "");
-							prelength = ""; // recycling
-							x = 0;
-							while (x < length){
-								variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name + "[" + x + "]");
-								variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Character.class);
-								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\0');
-								prelength += '\0';
-								x++;
-							}
-							variableValues[bracketsInside][getIndexOf(variableNames[bracketsInside], name)] = prelength;
-						}
-					}
-					else { // Is something else
-						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Object.class);
-						variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value);
-					}
-				}
-				else { // Is not an array
-					variableNames[bracketsInside] = Augment(variableNames[bracketsInside], name);
-					if (type.equals("int")){
-						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Integer.class);
-						try {
-							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], Integer.parseInt(value));
-						}
-						catch (Exception e){
-							try {
-								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
-							}
-							catch (Exception ex){
-								if (value.equals("")){
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
-								}
-								else {
-									// TODO code to handle math operations in initalization
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], 0);
-								}
-							}
-						}
-					}
-					else if (type.equals("boolean")){
-						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Boolean.class);
-						try {
-							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], Boolean.parseBoolean(value));
-						}
-						catch (Exception e){
-							try {
-								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
-							}
-							catch (Exception ex){
-								if (value.equals("")){
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
-								}
-								else {
-									// TODO code to analyze boolean, should exist later for if and while
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], false);
-								}
-							}
-						}
-					}
-					else if (type.equals("char")){
-						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Character.class);
-						try {
-							if (value.length() == 3){
-								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value.charAt(1));
-							}
-							else {
-								switch (value.charAt(2)){
-								case '0':
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\0');
-									break;
-								case 'n':
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\n');
-									break;
-								case '\\':
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\\');
-									break;			
-								case 't':
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\t');
-									break;							
-								}
-							}
-						}
-						catch (Exception e){
-							try {
-								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
-							}
-							catch (Exception ex){
-								if (value.equals("Serial.read()")){
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], (char)Globals.ReadSerial('s'));
-								}
-								else {
-									// I don't think there is anyother way to initalize this
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], '\0');
-								}
-							}
-						}
-					}
-					else if (type.equals("File")){
-						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], File.class);
-						if (value.equals("")){
-							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
-						}
-						else {
-							String filename = "";
-							boolean string = false;
-							int x = 0;
-							while (value.charAt(x) != '(') {
-								x++;
-							}
-							x++;
-							if (value.charAt(x) == '\"'){
-								string = true;
-								x++;
-							}
-							while (value.charAt(x) != '\"' || value.charAt(x) == ')'){
-								filename += value.charAt(x);
-								x++;
-							}
-							if (string){
-								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], filename);
-							}
-							else {
-								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(filename, bracketsInside));
-							}
-						}
-					}
-					else if (type.equals("float")){
-						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Float.class);
-						try {
-							variableValues[bracketsInside] = Augment(variableValues[bracketsInside], Float.parseFloat(value));
-						}
-						catch (Exception e){
-							try {
-								variableValues[bracketsInside] = Augment(variableValues[bracketsInside], getStoredValue(value, bracketsInside));
-							}
-							catch (Exception ex){
-								if (value.equals("")){
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], null);
-								}
-								else {
-									// TODO code for more math operators
-									variableValues[bracketsInside] = Augment(variableValues[bracketsInside], false);
-								}
-							}
-						}
-					}
-					else if (type.equals("uint8_t")){
-						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Byte[].class);
-						variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value);
-					}
-					else { // Other object
-						variableTypes[bracketsInside] = Augment(variableTypes[bracketsInside], Object.class);
-						variableValues[bracketsInside] = Augment(variableValues[bracketsInside], value);
-					}
-				}
-			}
-			else if (beginsWith.equals("if")){
-				int x = 0;
-				while (line.charAt(x) != '('){
-					x++;
-				}
-				x++;
-				String bool = "";
-				int inside = 1;
-				while (true){
-					if (line.charAt(x) == '('){
-						inside++;
-					}
-					if (line.charAt(x) == ')'){
-						inside--;
-						if (inside == 0){
-							break;
-						}
-					}
-					bool += line.charAt(x);
-					x++;
-				}
-				boolean cont = evaluateBool(bool, bracketsInside);
-				if (!cont){
-					skipping = true;
-					ifBracketClose = bracketsInside;
-					if (contains(line, "{")){
-						bracketsInside++;
-					}
-					continue;
-				}
-			}
-			else if (beginsWith.equals("while")){
-				int x = 0;
-				while (line.charAt(x) != '('){
-					x++;
-				}
-				x++;
-				String bool = "";
-				int inside = 1;
-				while (true){
-					if (line.charAt(x) == '('){
-						inside++;
-					}
-					if (line.charAt(x) == ')'){
-						inside--;
-						if (inside == 0){
-							break;
-						}
-					}
-					bool += line.charAt(x);
-					x++;
-				}
-				boolean cont = evaluateBool(bool, bracketsInside);
-				if (!cont){ //if false looks like an if
-					skipping = true;
-					looping = false;
-					ifBracketClose = bracketsInside;
-					if (contains(line, "{")){
-						bracketsInside++;
-					}
-					continue;
-				}
-				else {
-					whileLineStart = i - 1;
-					whileBracketClose = bracketsInside;
-					if (contains(line, "{")){
-						bracketsInside++;
-					}
-					looping = true;
-					continue;
-				}
-			}
-			else if (contains(line, "=")){
-				try {
-					String value = getVariableValue(line);
-					Class type = null;
-					int locallity = bracketsInside;
-					int t = 0;
-					if (contains(beginsWith, "[")){
-						while (beginsWith.charAt(t) != '['){
-							t++;
-						}
-						t++;
-						String numb = "";
-						while (beginsWith.charAt(t) != ']'){
-							numb += beginsWith.charAt(t);
-							t++;
-						}
-						try {
-							Integer.parseInt(numb);
-						}
-						catch (Exception e){ //Array call is a variable
-							int call = (int)getStoredValue(numb, locallity);
-							String newBegins = "";
-							t = 0;
-							while (beginsWith.charAt(t) != '['){
-								newBegins += beginsWith.charAt(t);
-								t++;
-							}
-							beginsWith = newBegins + "[" + call + "]";
-						}
-					}
-					while (locallity >= 0){
-						try {
-							type = variableTypes[locallity][getIndexOf(variableNames[locallity], beginsWith)];
-							break;
-						}
-						catch (Exception e) {}
-						locallity--;
-					}
-					if (type.equals(Integer.class)){
-						try {
-							variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = Integer.parseInt(value);
-						}
-						catch (Exception e){
-							try {
-								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
-							}
-							catch (Exception ex){
-								// TODO code to handle math operations in initalization
-								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = 0;
-							}
-						}
-					}
-					else if (type.equals(Character.class)){
-						try {
-							if (value.length() == 3){
-								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = value.charAt(1);
-							}
-							else if (value.length() == 4){
-								switch (value.charAt(2)){
-								case '0':
-									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\0';
-									break;
-								case 'n':
-									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\n';
-									break;
-								case '\\':
-									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\\';
-									break;	
-								case 't':
-									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\t';
-									break;
-								}
-							}
-							else {
-								t = 3/0;
-							}
-						}
-						catch (Exception e){
-							try {
-								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
-							}
-							catch (Exception ex){
-								if (value.equals("Serial.read()")){
-									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = (char)Globals.ReadSerial('s');
-								}
-								else {
-									// I don't think there is anyother way to initalize this
-									variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = '\0';
-								}
-							}
-						}
-						if (contains(beginsWith, "[")){
-							String strName = "";
-							int x = 0;
-							while (beginsWith.charAt(x) != '['){
-								strName += beginsWith.charAt(x);
-								x++;
-							}
-							String storeVal = "";
-							int length = ((String)variableValues[locallity][getIndexOf(variableNames[locallity], strName)]).length();
-							x = 0;
-							while (x < length){
-								try {
-									storeVal += (char)getStoredValue(strName + "[" + x + "]", locallity);
-								}
-								catch (Exception e){
-									storeVal += (char)(byte)getStoredValue(strName + "[" + x + "]", locallity);
-								}
-								x++;
-							}
-							variableValues[locallity][getIndexOf(variableNames[locallity], strName)] = storeVal;
-						}
-					}
-					else if (type.equals(Boolean.class)){
-						try {
-							variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = Boolean.parseBoolean(value);
-						}
-						catch (Exception e){
-							try {
-								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
-							}
-							catch (Exception ex){
-								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = evaluateBool(value, locallity);
-							}
-						}
-					}
-					else if (type.equals(Float.class)){
-						variableTypes[locallity] = Augment(variableTypes[locallity], Float.class);
-						try {
-							variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = Float.parseFloat(value);
-						}
-						catch (Exception e){
-							try {
-								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(value, locallity);
-							}
-							catch (Exception ex){
-								// TODO code for more math operators
-								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = 0.0;
-							}
-						}
-					}
-					else if (type.equals(File.class)){
-						String filename = "";
-						boolean string = false;
-						int x = 0;
-						while (value.charAt(x) != '(') {
-							x++;
-						}
-						x++;
-						if (value.charAt(x) == '\"'){
-							string = true;
-							x++;
-						}
-						while (value.charAt(x) != '\"' || value.charAt(x) == ')'){
-							filename += value.charAt(x);
-							x++;
-						}
-						if (string){
-							variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = filename;
-						}
-						else {
-							variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = getStoredValue(filename, locallity);
-						}
-					}
-					else if (type.equals(String.class)){
-						if (getStartsWith(value).equals("new")){
-							String string = "";
-							int length = ((String)variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)]).length();
-							int x = 0;
-							while (x < length){
-								variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith + "[" + x + "]")] = '\0';
-								string += '\0';
-								x++;
-							}
-							variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = string;
-						}
-					}
-					else {
-						variableValues[locallity][getIndexOf(variableNames[locallity], beginsWith)] = value;
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				} // If the 'variable' hasn't been declared
-			}
-			else if (beginsWith.equals("delay")){
-				try {
-					String prewait = "";
-					int x = 0;
-					while (line.charAt(x) != '('){
-						x++;
-					}
-					x++;
-					while (line.charAt(x) != ')'){
-						prewait += line.charAt(x);
-						x++;
-					}
-					Thread.sleep(Integer.parseInt(prewait));
-				} catch (Exception e) {}
-			}
-			else if (contains(line, "++")){
-				int x = bracketsInside; // Check variable Names from most local back
-				while (x >= 0){
-					try {
-						variableValues[x][getIndexOf(variableNames[x], beginsWith)] = (int)variableValues[x][getIndexOf(variableNames[x], beginsWith)] + 1;
-					}
-					catch (Exception e){ }
-					x--;
-				}
-			}
-			else if (contains(line, "close()")){
-				int z = bracketsInside;
-				while (z >= 0){
-					try { // If it is a file, close it by setting the filepath to null
-						Class varType = variableTypes[z][getIndexOf(variableNames[z], beginsWith)];
-						if (varType.equals(File.class)){
-							variableValues[z][getIndexOf(variableNames[z], beginsWith)] = "";
-						}
-					} catch (Exception ex) {}
-					z--;
-				}
-			}
-			else if (beginsWith.equals("Serial")){
-				String function = "";
-				int x = 0;
-				while (line.charAt(x) != '.'){
-					x++;
-				}
-				x++;
-				while (line.charAt(x) != '('){
-					function += line.charAt(x);
-					x++;
-				}
-				if(function.equals("read")){
-					Globals.ReadSerial('s');
-				}
-				else {
-					x++;
-					String value = "";
-					if (line.charAt(x) == '\"'){ //String
-						x++;
-						while (line.charAt(x) != '\"'){
-							value += line.charAt(x);
-							x++;
-						}
-						SerialPrint(value);
-					}
-					else { // Variable
-						while (line.charAt(x) != ')'){
-							value += line.charAt(x);
-							x++;
-						}
-						Object data = getStoredValue(value, bracketsInside);
-						try {
-							SerialPrint((byte[])data);
-						}
-						catch (Exception e){
-							SerialPrint(data + "");
-						}
-					}
-				}
-			}			
-			if (contains(line, "{")){
-				bracketsInside++;
-			}
-			if (contains(line, "}")){
-				bracketsInside--;
-				continue;
-			}
-		}		
-	}
-	
+
+	private final int SDpin = 4;
+
+	private boolean hasInstructions = false;
+	private int instructsComplete = 0;
+	private long timeSinceCmd = 0;
+
+	private int imageSize;
+	private File imgFile;
+	private File myFile;
+	private char[] filename = new char[13];
+
+	private char[] data = new char[30];
+	private int index = 2;
+	private char tag = '\0';
+
 	public void runCode(){
 		while (true){
-			interpretFile(CodeFile);
+			System.out.print(""); // Don't know why but fails without this.
 			try {
-				Thread.sleep(5);
-			} catch (InterruptedException e) {}
-		}
-	}
-	
-	
-	// CODE FOR TRANSLATING INO CODE
-	
-	private boolean contains(String str, String val){
-		boolean inString = false;
-		char[] search = str.toCharArray();
-		char[] vals = val.toCharArray();
-		int x = 0;
-		while (x < search.length - vals.length + 1){
-			if (inString){
-				if (search[x] == '\"'){
-					inString = false;
-				}
-				x++;
-				continue;
-			}
-			if (search[x] == '/' && search[x+1] == '/'){
-				return false;
-			}
-			if (search[x] == '\"'){
-				inString = true;
-				//x++;  Allows " to besearched for
-				//continue;
-			}
-			if (search[x] == vals[0]){
-				int matches = 1;
-				int y = 1;
-				while (y < vals.length){
-					if (search[x + y] == vals[y]){
-						matches++;
+			if (Globals.RFAvailable('s') > 0){
+				if (Globals.ReadSerial('s') == 's'){
+					delay(300);
+					Globals.ReadSerial('s');
+					tag = (char) Globals.ReadSerial('s');
+					Globals.ReadSerial('s');
+					data[1] = ' ';
+					while (Globals.RFAvailable('s') > 0){
+						data[index] = (char) Globals.ReadSerial('s');
+						index++;
 					}
-					y++;
+					while (index < 30){
+						data[index] = '\0';
+						index++;
+					}
+					if (tag == 'g'){
+						data[0] = 'r';
+						sendSerial(data);
+						delay(1000);
+						if (data[2] != '^'){
+							sendSerial("g #");
+						}
+					}
+					if (tag == 'r'){
+						data[0] = 'g';
+						sendSerial(data);
+						delay(1000);
+						if (data[2] != '^' && data[2] != '%' && data[2] != '}' && data[2] != '{'){
+							sendSerial("r #");
+						}
+					}
+					if (tag == 'c'){
+						index = 0;
+						while (index < 18){
+							data[index] = data[index + 2];
+							index++;
+						}
+						data[index] = '\0';
+						index++;
+						data[index] = '\0';
+						index++;
+						if (strcmp(data, "photo") == 0){
+							delay(500);
+							//takePhoto();
+						}
+						else if (strcmp(data, "[o]") == 0){
+							/*char[] filename = new char[] { 'P', 'I', 'C', '0', '0', '0', '0', '.', 'J', 'P', 'G' };
+							strcpy(filename, );
+							int i = 0;
+							while (i < 10000){
+								filename[4] = (char) ('0' + i/10);
+								filename[5] = (char) ('0' + i%10);
+	            				// 	create if does not exist, do not open existing, write, sync after write
+								if (! SD.exists(filename)) {
+									break;
+								}
+								i++;
+							}
+							myFile = SD.open(filename, FILE_WRITE);
+							index = 0;
+							uint8_t buffer;
+							while (Globals.RFAvailable('s') == 0) {}
+							delay(1000);
+							while (Globals.RFAvailable('s') > 0){
+								while (Globals.RFAvailable('s') > 0){
+									buffer = Globals.ReadSerial('s');
+	              // 	Serial.write(buffer);
+									myFile.write(buffer);
+									index++;
+								}
+								delay(2000);
+							}
+							myFile.close();
+							
+							sendSerial("r }");
+							delay(1200);
+							sendSerial("g {");
+							delay(1000);
+							myFile = SD.open(filename, FILE_READ);
+							sendSerial("g i ");
+							sendSerial(index);
+							delay(1000);
+							index = 0;
+							myFile = SD.open(filename, FILE_READ);
+							if (myFile) {
+	            // 	read from the file until there's nothing else in it:
+								while (myFile.available()) {
+									index = 0;
+									while ((index < 60) && (myFile.available())){
+										Serial.write(myFile.read());
+										index++;
+									}
+									delay(1000);
+								}
+								myFile.close();
+								cam.begin();
+								cam.setImageSize(imageSize);
+								sendSerial("r {");
+							}*/
+						}
+						else if (strcmp(data, "instructions") == 0){
+							/*if (SD.exists("instruct.txt")){
+								SD.remove("instruct.txt");
+							}
+							myFile = SD.open("instruct.txt", FILE_WRITE);
+							if (!myFile){
+								sendSerial("g n File Failed to Open");
+							}
+							while (Globals.RFAvailable('s') == 0) {}
+							delay(1000);
+							while (Globals.RFAvailable('s') > 0){
+								while (Globals.RFAvailable('s') > 0){
+									myFile.write((char)Globals.ReadSerial('s'));
+								}
+								delay(2000);
+							}
+							myFile.close();
+							hasInstructions = true;
+							instructsComplete = 0;
+							sendSerial("g }");
+							delay(700);
+							sendSerial("r {");
+							delay(700);
+							sendSerial("r instructions");
+							delay(1000);
+							myFile = SD.open("instruct.txt", FILE_READ);
+							while (myFile.available()) {
+								index = 0;
+								while ((index < 60) && (myFile.available())){
+									Serial.write((char)myFile.read());
+									index++;
+								}
+								delay(2000);
+							}
+							myFile.close();*/
+						}
+						else {
+							//sendSerial("\nrecieved: ");
+							//Serial.println(data);
+						}
+						// 	...
+					}
+					data = new char[30];
+					index = 2;
+					tag = '\0';
+					timeSinceCmd = System.currentTimeMillis();
 				}
-				if (matches == vals.length){
-					return true;
+				else {
+					while (Globals.RFAvailable('s') > 0){
+						Globals.ReadSerial('s');
+					}
 				}
 			}
-			x++;
-		}
-		return false;
-	}
-	
-	private String getStartsWith(String line){
-		if (line.length() == 0){
-			return "";
-		}
-		String out = "";
-		char[] chars = line.toCharArray();
-		int x = 0;
-		while (chars[x] == ' ' || chars[x] == '\t'){
-			x++;
-			if (x == chars.length){
-				return "";
+			
+			/*if (millis() - timeSinceCmd > 60000 && hasInstructions){
+				myFile = SD.open("instruct.txt", FILE_READ);
+				char* cmd;
+				int x = 0;
+				int count = 0;
+				while (count <= instructsComplete){
+					cmd = new char[20];
+					x = 0;
+					while (myFile.peek() != '\n'){
+						cmd[x] = myFile.read();
+						x++;
+					}
+					cmd[x] = '\0';
+					myFile.read();
+					count++;
+				}
+				
+				if (cmd[0] == 's'){
+					x = 0;
+					while (x < strlen(cmd)-2){
+						cmd[x] = cmd[x+2];
+						x++;
+					}
+					cmd[x] = '\0';
+					if (strcmp(cmd, "photo") == 0){
+	         // 	takePicture();
+					}
+					else if (strcmp(cmd, "report") == 0){
+						if (sendSerial("g n Sat Instructs Done")) {
+							hasInstructions = false;
+							instructsComplete = 0;
+						}
+						else {
+							instructsComplete--;
+						}
+					}
+				}
+				instructsComplete++;
+				myFile.close();
+			}*/
+			}
+			catch (Exception e){
+				System.out.println("Error in Satellite Code");
 			}
 		}
-		if (chars[x] == '/' && chars[x+1] == '/'){
-			return "//";
-		}
-		if (isSymbol(chars[x])){
-			return chars[x] + "";
-		}
-		while (!isSymbol(chars[x]) || chars[x] == '[' || chars[x] == ']'){ //Last to for the identification of array variables
-			out += chars[x];
-			x++;
-		}
-		return out;
 	}
+		
+	/*void takePhoto(){
+	  sendSerial("r }");
+	  cam.setImageSize(imageSize);
+	  if (cam.takePicture()){
+	    filename = new char[13];
+	    strcpy(filename, "PIC0000.JPG");
+	    int i = 0;
+	    while (i < 100000){
+	      filename[5] = '0' + i/10;
+	      filename[6] = '0' + i%10;
+	      if (! SD.exists(filename)){
+	        break;
+	      }
+	      i++;
+	    }
+	        
+	    imgFile = SD.open(filename, FILE_WRITE);
+	    uint16_t jpglen = cam.frameLength();
+	    uint16_t length = jpglen;
+	    byte wCount = 0; // For counting # of writes
+	    while (jpglen > 0) {
+	      // read 32 bytes at a time;
+	      uint8_t* buffer;
+	      uint8_t bytesToRead = min(32, jpglen); // change 32 to 64 for a speedup but may not work with all setups!
+	      buffer = cam.readPicture(bytesToRead);
+	      imgFile.write(buffer, bytesToRead);
+	      wCount++;
+	      if(wCount >= 64) { // Every 2K, give a little feedback so it doesn't appear locked up
+	        wCount = 0;
+	      }
+	      jpglen -= bytesToRead;
+	   }
+	   imgFile.close();
+	            
+	   sendSerial("g i ");
+	   sendSerial(length);
+	   delay(1000);
+	   myFile = SD.open(filename, FILE_READ);
+	   if (myFile) {
+	      // read from the file until there's nothing else in it:
+	      while (myFile.available()) {
+	        index = 0;
+	        while ((index < 64) && (myFile.available())){
+	          Serial.write(myFile.read());
+	          index++;
+	        }
+	        delay(1000);
+	      }
+	      // close the file:
+	      myFile.close();
+	      cam.begin();
+	      cam.setImageSize(imageSize);
+	      sendSerial("r {");
+	    }
+	  }
+	  else {
+	    delay(1000);
+	    sendSerial("g n Picture failed to take.");
+	  }
+	}*/
 	
-	private boolean isSymbol(char val){
-		return (val < 48) || (val > 57 && val < 65) || (val > 90 && val < 97) || (val > 122);
+	private void delay(int length){
+		try {
+			Thread.sleep((int)(length/Globals.getTimeScale()));
+		}
+		catch (Exception e) {}
 	}
-	
-	private boolean lineIsVariableDec(String line){
-		String begining = getStartsWith(line);
-		if (begining.equals("const") || begining.equals("int") || begining.equals("char") || begining.equals("File") || begining.equals("byte") || begining.equals("uint16_t") || begining.equals("boolean") || begining.equals("uint8_t")){
-			return true;
-		}
-		if (contains(line, "= " + begining)){
-			return true;
-		}
-		return false;
+
+	boolean sendSerial(String mess){
+		return sendSerial(mess.toCharArray());
 	}
-	
-	private String getVariableType(String line){
-		String begining = getStartsWith(line);
-		char[] working = line.toCharArray();
-		if (begining.equals("const")){
-			int y = 0;
-			while (working[y] != 'c'){ y++; }
-			working[y] = ' ';
-			working[y+1] = ' ';
-			working[y+2] = ' ';
-			working[y+3] = ' ';
-			working[y+4] = ' ';
-			begining = getStartsWith(buildString(working));
-		}
+
+	boolean sendSerial(char[] message){
+		String print = "";
 		int x = 0;
-		while (working[x] == ' ' || working[x] == '\t'){ x++; }
-		while (working[x] != ' '){ x++;	}
-		if (working[x-1] == '*'){
-			return begining + "*";
-		}
-		return begining;
-	}
-	
-	private String getVariableName(String line){
-		String begining = getStartsWith(line);
-		char[] working = line.toCharArray();
-		if (begining.equals("const")){
-			int y = 0;
-			while (working[y] != 'c'){ y++; }
-			working[y] = ' ';
-			working[y+1] = ' ';
-			working[y+2] = ' ';
-			working[y+3] = ' ';
-			working[y+4] = ' ';
-			begining = getStartsWith(buildString(working));
-		}
-		int x = 0;
-		while (working[x] == ' ' || working[x] == '\t'){ x++; }
-		while (working[x] != ' '){ x++; }
-		x++;
-		String name = "";
-		while (working[x] != ' ' && working[x] != ';'){
-			name += working[x];
-			x++;
-		}
-		return name;
-	}
-	
-	private String getVariableValue(String line){
-		if (!contains(line, "=")){
-			return "";
-		}
-		char[] working = line.toCharArray();
-		int x = 0;
-		while (working[x] != '='){ x++;	}
-		x += 2;
-		String val = "";
-		while (working[x] != ';'){
-			val += working[x];
-			x++;
-		}
-		return val;
-	}
-	
-	private Object getStoredValue(String name, int locallity){
-		if (name.equals("Serial.read()")){
-			return Globals.ReadSerial('s');
-		}
-		if (name.equals("Serial.available()")){
-			return Globals.RFAvailable('s');
-		}
-		while (locallity >= 0){
-			try {
-				return variableValues[locallity][getIndexOf(variableNames[locallity], name)];
+		while (x < message.length){
+			if (message[x] == '\0'){
+				break;
 			}
-			catch (Exception e){}
-			locallity--;
-		}
-		return null;
-	}
-	
-	// CODE FOR EMULATING FUNCTIONS
-	
-	private void SerialPrint(String msg){
-		char[] output = msg.toCharArray();
-		int x = 0;
-		while (x < output.length){
-			if (output[x] != '\0'){
-				Globals.writeToSerial(output[x], 's'); // Write to Serial one char at a time
-			}
+			Globals.writeToSerial(message[x], 'r'); // Write to Serial one char at a time
+			print += message[x];
 			try {
 				Thread.sleep((int)(20 / Globals.getTimeScale())); // Pause for sending
 			} catch (InterruptedException e) {}
 			x++;
 		}
-	}
-	
-	private void SerialPrint(char[] msg){
-		String message = "";
-		int x = 0;
-		while (x < msg.length){
-			if (msg[x] == '\0'){
-				break;
-			}
-			message += msg[x];
-			x++;
-		}
-		SerialPrint(message);
-	}
-	
-	private void SerialPrint(byte[] data){
-		int x = 0;
-		while (x < data.length){
-			Globals.writeToSerial(data[x], 's');
-			try {
-				Thread.sleep((int)(20 / Globals.getTimeScale()));
-			} catch (Exception e) {}
-		}
-	}
-	
-	private boolean evaluateBool(String bool, int locallity){
-		try {
-		if (getStartsWith(bool).equals("strcmp")){
-			// Get the 2 terms
-			int x = 0;
-			while (bool.charAt(x) != '('){
-				x++;
-			}
-			x++;
-			while (bool.charAt(x) == ' '){
-				x++;
-			}
-			String first = "";
-			while (bool.charAt(x) != ','){
-				first += bool.charAt(x);
-				x++;
-			}
-			x++;
-			while (bool.charAt(x) == ' '){
-				x++;
-			}
-			String second = "";
-			while (bool.charAt(x) != ' ' && bool.charAt(x) != ')'){
-				second += bool.charAt(x);
-				x++;
-			}
-			//Get the term values
-			if (first.charAt(0) == '\"'){//Is a string
-				first = removeChar(first, '\"');
-			}
-			else {//Is a variable
-				first = (String)getStoredValue(first, locallity);
-			}
-			if (second.charAt(0) == '\"'){
-				second = removeChar(second, '\"');
-			}
-			else {
-				second = (String)getStoredValue(second, locallity);
-			}
-			//Check
-			return first.equals(second);
-		}
-		//else if (getStartsWith(bool).length() == bool.length()){//one term
-		//	if (bool.equals("true")){
-		//		return true;
-		//	}
-		//	else if (bool.equals("false")){
-		//		return false;
-		//	}
-		//	else {
-		//		return (boolean)getStoredValue(bool, locallity);
-		//	}
-		//}
-		else if (contains(bool, "(") && !contains(bool, "()")){//must handle paraethesis first but not functions
-			String[] bools = new String[0];
-			String[] operations = new String[0];
-			int x = 0;
-			int y = 0;
-			while (x < bool.length()){
-				if (bool.charAt(x) == '('){
-					bools = Augment(bools, "");
-				}
-				else if (bool.charAt(x) == ')'){
-					operations = Augment(operations, "");
-					y++;
-				}
-				else {
-					try {
-						bools[y] += bool.charAt(x);
-					}
-					catch (Exception e){
-						if (bool.charAt(x) != ' '){
-							operations[y - 1] += bool.charAt(x);
-						}
-					}
-				}
-				x++;
-			}
-			boolean[] values = new boolean[bools.length];
-			x = 0;
-			while (x < values.length){
-				values[x] = evaluateBool(bools[x], locallity);
-				x++;
-			}
-			boolean standing;
-			switch (operations[0]){
-			case "&&":
-				standing = values[0] && values[1];
-				break;
-			case "||":
-				standing = values[0] || values[1];
-				break;
-			default:
-				standing = false;
-				break;
-			}
-			x = 1;
-			while (x < values.length - 1){
-				switch (operations[x]){
-				case "&&":
-					standing = standing && values[x+1];
-					break;
-				case "||":
-					standing = standing || values[x+1];
-					break;
-				default:
-					standing = false;
-					break;
-				}
-				x++;
-			}
-			return standing;
-		}
-		else if (contains(bool, "takePicutre()")){ //catches did picture take
-			return false; //because I have no code to take a picture
-		}
-		else if (contains(bool, "available()") && !contains(bool, "Serial")){ //catches file.available()
-			return true;
-		}
-		else {
-			// get Terms
-			int x= 0;
-			String first = "";
-			while (bool.charAt(x) != ' '){
-				first += bool.charAt(x);
-				x++;
-			}
-			x++;
-			String operation = "";
-			while (bool.charAt(x) != ' '){
-				operation += bool.charAt(x);
-				x++;
-			}
-			x++;
-			String second = "";
-			while (x < bool.length()){
-				second += bool.charAt(x);
-				x++;
-			}
-			//get Values
-			Object firstval = null;
-			Object secondval = null;
-			Class compType = null;
-			if (first.charAt(0) == '\''){//char
-				if (bool.length() == 3){
-					firstval = bool.charAt(1);
-				}
-				else {
-					switch (bool.charAt(2)){
-					case '0':
-						firstval = '\0';
-						break;
-					case 'n':
-						firstval = '\n';
-						break;
-					case '\\':
-						firstval = '\\';
-						break;			
-					case 't':
-						firstval = '\t';
-						break;							
-					}
-				}
-				compType = Character.class;
-			}
-			else if (47 < first.charAt(0) && first.charAt(0) < 58){//int
-				try {
-					firstval = Integer.parseInt(first);
-					compType = Integer.class;
-				}
-				catch (Exception e){
-					return false;
-				}
-			}
-			else { //variable
-				firstval = getStoredValue(first, locallity);
-			}
-			if (second.charAt(0) == '\''){//char
-				if (second.length() == 3){
-					secondval = second.charAt(1);
-				}
-				else {
-					switch (second.charAt(2)){
-					case '0':
-						secondval = '\0';
-						break;
-					case 'n':
-						secondval = '\n';
-						break;
-					case '\\':
-						secondval = '\\';
-						break;			
-					case 't':
-						secondval = '\t';
-						break;							
-					}
-				}
-				compType = Character.class;
-			}
-			else if (47 < second.charAt(0) && second.charAt(0) < 58){//int
-				try {
-					secondval = Integer.parseInt(second);
-					compType = Integer.class;
-				}
-				catch (Exception e){
-					return false;
-				}
-			}
-			else { //variable
-				secondval = getStoredValue(second, locallity);
-			}
-			//System.out.println(first + ":" + firstval + " " + operation + " " + second + ":" + secondval);
-			try {
-				if (compType == Character.class){
-					try {
-						return (char)firstval == (char)secondval;
-					}
-					catch (Exception e){
-						try {
-							return (char)(byte)firstval == (char)secondval;
-						}
-						catch (Exception ex){
-							try {
-								return (char)firstval == (char)(byte)secondval;
-							}
-							catch (Exception exc){
-								return (byte)firstval == (byte)secondval;
-							}
-						}
-					}
-				}
-				else {
-					switch (operation){
-					case "==":
-						return (int)firstval == (int)secondval;
-					case "<":
-						return (int)firstval < (int)secondval;
-					case ">":
-						return (int)firstval > (int)secondval;
-					case "<=":
-						return (int)firstval <= (int)secondval;
-					case ">=":
-						return (int)firstval >= (int)secondval;
-					}
-				}
-			}
-			catch (Exception e){ //both variable - no type
-				//TODO code to find variable type and compare
-				e.printStackTrace();
-			}
-		}
-		} catch (Exception e) {
-			//e.printStackTrace();
-		}
-		return false;
-	}
-	
-	// SUPPORT FUNCTIONS
-	
-	private String[] Augment(String[] array, String val){
-		String[] out = new String[array.length+1];
-		int x = 0;
-		while (x < array.length){
-			out[x] = array[x];
-			x++;
-		}
-		out[x] = val;
-		return out;
-	}
-	
-	private Object[] Augment(Object[] array, Object val){
-		Object[] out = new Object[array.length +1];
-		int x = 0;
-		while (x < array.length){
-			out[x] = array[x];
-			x++;
-		}
-		out[x] = val;
-		return out;
-	}
-	
-	private Class[] Augment(Class[] array, Class val){
-		Class[] out = new Class[array.length +1];
-		int x = 0;
-		while (x < array.length){
-			out[x] = array[x];
-			x++;
-		}
-		out[x] = val;
-		return out;
-	}
-	
-	private String removeChar(String str, char val){
-		String out = "";
-		int x = 0;
-		while (x < str.length()){
-			if (str.charAt(x) != val){
-				out += str.charAt(x);
-			}
-			x++;
-		}
-		return out;
-	}
-	
-	private String buildString(char[] array){
-		String out = "";
-		int x = 0;
-		while (x < array.length){
-			if (array[x] != '\0'){
-				out += array[x];
-			}
-			x++;
-		}
-		return out;
-	}
-	
-	private int getIndexOf(String[] array, String val){
-		int x = 0;
-		while (x < array.length){
-			if (val.equals(array[x])){
-				return x;
-			}
-			x++;
-		}
-		return -1;
+		GUI.SerialHistoryLbl.setText(GUI.SerialHistoryLbl.getText() + print + "\t\t" + (System.currentTimeMillis()-Globals.startTimeMillis) + "\n");
+		return true;
 	}
 
+	boolean sendSerial(char mess){
+		Globals.writeToSerial(mess, 'r');
+		GUI.SerialHistoryLbl.setText(GUI.SerialHistoryLbl.getText() + mess + "\t\t\t" + (System.currentTimeMillis()-Globals.startTimeMillis) + "\n");
+		return true;
+	}
 	
+	private int strcmp(char[] first, String second){
+		try {
+			char[] sec = second.toCharArray();
+			int count = 0;
+			int x = 0;
+			while (first[x] != '\0'){
+				if (first[x] != sec[x]){
+					return 1;
+				}
+				x++;
+			}
+			return 0;
+		}
+		catch (Exception e){
+			return 1;
+		}
+	}
 }
