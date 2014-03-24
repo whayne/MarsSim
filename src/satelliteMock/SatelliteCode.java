@@ -40,7 +40,7 @@ public class SatelliteCode {
 			try {
 			if (Globals.RFAvailable('s') > 0){
 				if (Globals.ReadSerial('s') == 's'){
-					delay(300);
+					delay(1000);
 					Globals.ReadSerial('s');
 					tag = (char) Globals.ReadSerial('s');
 					Globals.ReadSerial('s');
@@ -318,7 +318,7 @@ public class SatelliteCode {
 			if (message[x] == '\0'){
 				break;
 			}
-			Globals.writeToSerial(message[x], 'r'); // Write to Serial one char at a time
+			Globals.writeToSerial(message[x], 's'); // Write to Serial one char at a time
 			print += message[x];
 			try {
 				Thread.sleep((int)(20 / Globals.getTimeScale())); // Pause for sending

@@ -1,5 +1,6 @@
 package objects;
 
+import roverMock.RoverEvents;
 import simulatorWrapper.WrapperEvents;
 
 public class Globals {

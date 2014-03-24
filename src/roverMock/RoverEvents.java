@@ -4,7 +4,7 @@ import objects.ThreadTimer;
 
 public class RoverEvents {
 
-	static RoverCode CODE = new RoverCode();
+	public static RoverCode CODE = new RoverCode();
 	
 	static void Window_Opened(){
 		simulatorWrapper.WrapperEvents.WindowOpened();

@@ -4,7 +4,7 @@ import objects.ThreadTimer;
 
 public class SatelliteEvents {
 
-	static SatelliteCode CODE = new SatelliteCode();
+	public static SatelliteCode CODE = new SatelliteCode();
 	
 	static void Window_Opened(){
 		simulatorWrapper.WrapperEvents.WindowOpened();

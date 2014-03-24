@@ -140,8 +140,8 @@ public class RoverCode {
 		          delay(1000);
 		          sendSerial("s r n Instructions Transfered");
 		          hasInstructions = true;
-		          instructsComplete = 0;
-		        }*/
+		          instructsComplete = 0;*/
+		        }
 		      }
 		      else if (tag == '#'){
 		        //Satilite Confirmation
@@ -164,10 +164,12 @@ public class RoverCode {
 		      timeSinceCmd = System.currentTimeMillis();
 		    }
 		    else {
-		      delay(500);
+		      delay(300);
 		      go = false;
-		      while (Globals.RFAvailable('r') > 0){
+		      int waiting = Globals.RFAvailable('r');
+		      while (waiting >= 0){
 		        Globals.ReadSerial('r');
+		        waiting--;
 		      }
 		    }  
 		  }
@@ -276,8 +278,8 @@ public class RoverCode {
 		  motor2->run(RELEASE);
 		  motor3->run(RELEASE);
 		  motor4->run(RELEASE); 
-		  delay(1000);*/
-		  }
+		  delay(1000);
+		  }*/
 		} catch (Exception e) {
 			System.out.println("Error in Rover Run Code");
 		}
