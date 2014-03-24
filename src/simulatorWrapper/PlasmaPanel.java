@@ -16,7 +16,12 @@ public class PlasmaPanel extends JPanel {
 	private double minval;
 	private double maxval;
 	private Random rnd = new Random();
-	private int squareResolution = 20;
+	private int squareResolution = 30;
+	
+	private boolean painting = false;
+	
+	private int currentColorScheme = 0;
+	static final int REDtoGREEN = 0, BLACKtoWHITE = 1;
 	
 	private double ColorModifier;
 	
@@ -113,6 +118,7 @@ public class PlasmaPanel extends JPanel {
 	
 	@Override
 	public void paintComponent(Graphics g) {
+		painting = true;
 		try { 
 			if (values.length > 0){
 				this.setSize(values.length*squareResolution, values[0].length*squareResolution);
@@ -130,7 +136,7 @@ public class PlasmaPanel extends JPanel {
 								z++;
 							}
 							if (z == targets.length){
-								z = 1/0;
+								z = 1/0; // Force Catch Statement
 							}
 						}
 						catch (Exception e){
@@ -143,6 +149,7 @@ public class PlasmaPanel extends JPanel {
 				}	
 			}
 		} catch (Exception e) {}
+		painting = false;
 	}
 
 	public void setTargets(Point[] targs){
@@ -236,19 +243,43 @@ public class PlasmaPanel extends JPanel {
 	}
 	
 	private Color getColor(double numb) {
-		//Black to White
-		//int x = (int) Math.round((numb - minval) / maxval * 255);
-		//return new Color(x, x, x);
-		
-		//Red>Yellow>Green
-		int red = (int)(255 - (ColorModifier*4/3.0)*Math.pow((numb-((maxval-minval)/2.0+minval)), 2));
-		if (red < 0){
-			red = 0;
+		switch (currentColorScheme){
+		case REDtoGREEN:
+			int red = (int)(255 - (ColorModifier*4/3.0)*Math.pow((numb-((maxval-minval)/2.0+minval)), 2));
+			if (red < 0){
+				red = 0;
+			}
+			int green = (int)(255 - (ColorModifier*3/4.0)*Math.pow((numb-maxval), 2));
+			if (green < 0){
+				green = 0;
+			}
+			int blue = (green - 240) / 2;
+			if (blue < 0){
+				blue = 0;
+			}
+			return new Color(red, green, blue);
+		case BLACKtoWHITE:
+			int x = (int) Math.round((numb - minval) / maxval * 255);
+			return new Color(x, x, x);
+		default:
+			return null;
 		}
-		int green = (int)(255 - (ColorModifier*3/4.0)*Math.pow((numb-maxval), 2));
-		if (green < 0){
-			green = 0;
-		}
-		return new Color(red, green, 0);
 	}
+	
+	public void setColorScheme(int which){
+		currentColorScheme = which;
+		this.repaint();
+	}
+	
+	public void setResolution(int res){
+		if (res > 0){
+			squareResolution = res;
+			this.repaint();
+		}
+	}
+	
+	public int getResolution(){
+		return squareResolution;
+	}
+	
 }

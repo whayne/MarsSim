@@ -29,4 +29,9 @@ public class WrapperEvents {
 		CODE.updateTimeScale();
 	}
 	
+	public static void moveRover(double distance, double angle){
+		CODE.MAP.setRoverDirection(CODE.MAP.getRoverDirection() + angle);
+		CODE.MAP.setRoverLocation(CODE.MAP.getRoverLocation().offset(distance*Math.sin(CODE.MAP.getRoverDirection()), distance*(Math.cos(CODE.MAP.getRoverDirection()))));
+	}
+	
 }

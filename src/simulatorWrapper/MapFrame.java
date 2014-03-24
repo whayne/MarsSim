@@ -19,6 +19,13 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import javax.swing.JMenuBar;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JRadioButtonMenuItem;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.awt.Color;
 
 public class MapFrame extends JFrame {
 
@@ -28,7 +35,9 @@ public class MapFrame extends JFrame {
 	public PlasmaPanel PlasmaMap;
 	public double[][] mapValues;
 	public Point[] mapTargets;
-	private Point roverLocation = new Point(0, 0);
+	private DecimalPoint roverLocation = new DecimalPoint();
+	private JRadioButtonMenuItem rdbtnmntmRedToGreen;
+	private JRadioButtonMenuItem rdbtnmntmBlackToWhite;
 
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -59,7 +68,75 @@ public class MapFrame extends JFrame {
 			}
 		});
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		JMenuBar menuBar = new JMenuBar();
+		setJMenuBar(menuBar);
+		
+		JMenu mnDisplay = new JMenu("Display");
+		menuBar.add(mnDisplay);
+		
+		JMenu mnZoom = new JMenu("Zoom");
+		mnDisplay.add(mnZoom);
+		
+		JMenuItem mntmZoomIn = new JMenuItem("Zoom In");
+		mntmZoomIn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				zoom(5);
+			}
+		});
+		mnZoom.add(mntmZoomIn);
+		
+		JMenuItem mntmZoomOut = new JMenuItem("Zoom Out");
+		mntmZoomOut.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				zoom(-5);
+			}
+		});
+		mnZoom.add(mntmZoomOut);
+		
+		JMenu mnColorScheme = new JMenu("Color Scheme");
+		mnDisplay.add(mnColorScheme);
+		
+		rdbtnmntmRedToGreen = new JRadioButtonMenuItem("Red to Green");
+		rdbtnmntmRedToGreen.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				rdbtnmntmBlackToWhite.setSelected(false);
+				rdbtnmntmRedToGreen.setSelected(true);
+				PlasmaMap.setColorScheme(PlasmaPanel.REDtoGREEN);
+			}
+		});
+		rdbtnmntmRedToGreen.setSelected(true);
+		mnColorScheme.add(rdbtnmntmRedToGreen);
+		
+		rdbtnmntmBlackToWhite = new JRadioButtonMenuItem("Black to White");
+		rdbtnmntmBlackToWhite.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				rdbtnmntmRedToGreen.setSelected(false);
+				rdbtnmntmBlackToWhite.setSelected(true);
+				PlasmaMap.setColorScheme(PlasmaPanel.BLACKtoWHITE);
+			}
+		});
+		mnColorScheme.add(rdbtnmntmBlackToWhite);
+		
+		JMenu mnMap = new JMenu("Map");
+		menuBar.add(mnMap);
+		
+		JMenu mnLoadMap = new JMenu("Load Map");
+		mnMap.add(mnLoadMap);
+		
+		JMenuItem mntmPlasmaMap = new JMenuItem("Plasma Map");
+		mnLoadMap.add(mntmPlasmaMap);
+		
+		JMenuItem mntmFlatMap = new JMenuItem("Flat Map");
+		mnLoadMap.add(mntmFlatMap);
+		
+		JMenuItem mntmFromFile = new JMenuItem("From File...");
+		mnLoadMap.add(mntmFromFile);
+		
+		JMenuItem mntmScaleTerrainVertical = new JMenuItem("Scale Terrain Vertical");
+		mnMap.add(mntmScaleTerrainVertical);
 		contentPane = new JPanel();
+		contentPane.setBackground(Color.BLACK);
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		setIconImage(Toolkit.getDefaultToolkit().getImage(MapFrame.class.getResource("/Map_with_Compass.png")));
@@ -67,6 +144,7 @@ public class MapFrame extends JFrame {
 		contentPane.setLayout(null);
 		
 		RoverMarker = new MapIcon();
+		RoverMarker.setLocation(198, 162);
 		RoverMarker.setSize(60, 60);
 		RoverMarker.setAngle(90);
 		contentPane.add(RoverMarker);
@@ -76,7 +154,7 @@ public class MapFrame extends JFrame {
 		mapTargets = PlasmaMap.genorateTargets();
 		PlasmaMap.setTargets(mapTargets);
 		contentPane.add(PlasmaMap);
-		PlasmaMap.setLocation((this.getWidth() - PlasmaMap.getWidth()) / 2, (this.getHeight() - PlasmaMap.getHeight()) / 2);
+		PlasmaMap.setLocation(107, 44);
 		
 		this.addKeyListener(new KeyAdapter() {
 			@Override
@@ -85,19 +163,23 @@ public class MapFrame extends JFrame {
 				Integer key = e.getKeyCode();
 				switch (key) {
 				case 39:
-					PlasmaMap.setLocation(PlasmaMap.getX() - 10, PlasmaMap.getY());
+					setRoverLocation(roverLocation.offset(10, 0));
+					//PlasmaMap.setLocation(PlasmaMap.getX() - 10, PlasmaMap.getY());
 					RoverMarker.setAngle(0);
 					break;
 				case 37:
-					PlasmaMap.setLocation(PlasmaMap.getX() + 10, PlasmaMap.getY());
+					setRoverLocation(roverLocation.offset(-10, 0));
+					//PlasmaMap.setLocation(PlasmaMap.getX() + 10, PlasmaMap.getY());
 					RoverMarker.setAngle(180);
 					break;
 				case 38:
-					PlasmaMap.setLocation(PlasmaMap.getX(), PlasmaMap.getY() + 10);
+					setRoverLocation(roverLocation.offset(0, 10));
+					//PlasmaMap.setLocation(PlasmaMap.getX(), PlasmaMap.getY() + 10);
 					RoverMarker.setAngle(90);
 					break;
 				case 40:
-					PlasmaMap.setLocation(PlasmaMap.getX(), PlasmaMap.getY() - 10);
+					setRoverLocation(roverLocation.offset(0, -10));
+					//PlasmaMap.setLocation(PlasmaMap.getX(), PlasmaMap.getY() - 10);
 					RoverMarker.setAngle(270);
 					break;
 				}
@@ -111,12 +193,13 @@ public class MapFrame extends JFrame {
 		setRoverLocation(roverLocation);
 	}
 
-	public void setRoverLocation(Point p){
-		roverLocation = p;
-		PlasmaMap.setLocation((int)((this.getWidth() - PlasmaMap.getWidth()) / 2 - p.getX()), (int)((this.getHeight() - PlasmaMap.getHeight()) / 2 + p.getY()));
+	public void setRoverLocation(DecimalPoint loc){
+		roverLocation = loc;
+		Point pointOnScreen = roverLocation.scale(PlasmaMap.getResolution()/100.0).toPoint();
+		PlasmaMap.setLocation((int)((this.getWidth() - PlasmaMap.getWidth()) / 2 - pointOnScreen.getX()), (int)((this.getHeight() - PlasmaMap.getHeight()) / 2 + pointOnScreen.getY()));
 	}
 	
-	public Point getRoverLocation(){
+	public DecimalPoint getRoverLocation(){
 		return roverLocation;
 	}
 	
@@ -128,4 +211,9 @@ public class MapFrame extends JFrame {
 		return RoverMarker.getAngle();
 	}
 	
+	private void zoom(int scale){
+		PlasmaMap.setResolution(PlasmaMap.getResolution() + scale);
+		setRoverLocation(roverLocation);
+		this.repaint();	
+	}
 }

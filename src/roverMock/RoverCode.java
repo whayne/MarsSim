@@ -1,6 +1,8 @@
 package roverMock;
 
 import objects.Globals;
+import objects.ThreadTimer;
+import simulatorWrapper.WrapperEvents;
 
 public class RoverCode {
 
@@ -19,12 +21,18 @@ public class RoverCode {
 	boolean waiting = false;
 	long waitTime = 0;
 	
-
-	float boardVoltage = 0;
-	float motorVoltage = 0;
+	float boardVoltage = 9;
+	float motorVoltage = 12;
 	float armVoltage = 0;
 	float R1 = 10000.0f;
 	float R2 = 3300.0f;
+	
+	int[] MotorPowers = new int[] { 150, 150, 150, 150 };
+	int[] MotorStates = new int[] { 0, 0, 0, 0 };
+		final int FORWARD = 1, BACKWARD = -1, RELEASE = 0;
+	double axel_width = 40;
+	double wheel_radius = 6;
+	int time_step = 100;
 	
 	private char tag = '\0';
 	private char[] data = new char[20];
@@ -36,6 +44,18 @@ public class RoverCode {
 	}
 	
 	public void runCode(){
+		new ThreadTimer(0, new Runnable(){
+			public void run(){
+				driveRover();
+				try {
+					Thread.sleep(time_step);
+				}
+				catch (Exception e){
+					Thread.currentThread().interrupt();
+				}
+			}
+		}, ThreadTimer.FOREVER);
+		
 		while (true){
 		System.out.print(""); // Don't know why but fails without this.
 		try {
@@ -70,39 +90,39 @@ public class RoverCode {
 		        data[index] = '\0';
 		        if (strcmp(data, "move") == 0){
 		          sendSerial("s r %");
-		          /*motor1->run(FORWARD);
-		          motor2->run(FORWARD);
-		          motor3->run(FORWARD);
-		          motor4->run(FORWARD);
-		          delay(1000); //For ir sensor testing*/
+		          MotorStates[1] = FORWARD;
+		          MotorStates[2] = FORWARD;
+		          MotorStates[3] = FORWARD;
+		          MotorStates[4] = FORWARD;
+		          delay(1000); //For ir sensor testing
 		        }        
 		        else if (strcmp(data, "stop") == 0){
 		          sendSerial("s r %");
-		          /*motor1->run(RELEASE);
-		          motor2->run(RELEASE);
-		          motor3->run(RELEASE);
-		          motor4->run(RELEASE); */
+		          MotorStates[1] = RELEASE;
+		          MotorStates[2] = RELEASE;
+		          MotorStates[3] = RELEASE;
+		          MotorStates[4] = RELEASE;
 		        }
 		        else if (strcmp(data, "spin_ccw") == 0) {
 		          sendSerial("s r %");
-		          /*motor1->run(BACKWARD);
-		          motor2->run(BACKWARD);
-		          motor3->run(FORWARD);
-		          motor4->run(FORWARD);*/
+		          MotorStates[1] = BACKWARD;
+		          MotorStates[2] = BACKWARD;
+		          MotorStates[3] = FORWARD;
+		          MotorStates[4] = FORWARD;
 		        }
 		        else if (strcmp(data, "spin_cw") == 0) {
 		          sendSerial("s r %");
-		          /*motor1->run(FORWARD);
-		          motor2->run(FORWARD);
-		          motor3->run(BACKWARD);
-		          motor4->run(BACKWARD);*/ 
+		          MotorStates[1] = FORWARD;
+		          MotorStates[2] = FORWARD;
+		          MotorStates[3] = BACKWARD;
+		          MotorStates[4] = BACKWARD;
 		        }
 		        else if (strcmp(data, "backward") == 0) {
 		          sendSerial("s r %");
-		          /*motor1->run(BACKWARD);
-		          motor2->run(BACKWARD);
-		          motor3->run(BACKWARD);
-		          motor4->run(BACKWARD);*/ 
+		          MotorStates[1] = BACKWARD;
+		          MotorStates[2] = BACKWARD;
+		          MotorStates[3] = BACKWARD;
+		          MotorStates[4] = BACKWARD;
 		        }
 		        else if (strcmp(data, "getvolts") == 0) {
 		          sendSerial("s r %");
@@ -286,7 +306,41 @@ public class RoverCode {
 		}
 	}
 	
-	boolean sendSerial(String mess){
+	public void driveRover(){
+		double dist_left = 0;
+		double dist_right = 0;
+		if ( Math.abs(adjustForIncline(getMotorSpeed(MotorPowers[0]*MotorStates[0], motorVoltage), 0)) > Math.abs(adjustForIncline(getMotorSpeed(MotorPowers[1]*MotorStates[1], motorVoltage), 0)) ){
+			dist_left = adjustForIncline(getMotorSpeed(MotorPowers[0]*MotorStates[0], motorVoltage), 0) * wheel_radius;
+		}
+		else {
+			dist_left = adjustForIncline(getMotorSpeed(MotorPowers[1]*MotorStates[1], motorVoltage), 0) * wheel_radius;
+		}
+		if ( Math.abs(adjustForIncline(getMotorSpeed(MotorPowers[2]*MotorStates[2], motorVoltage), 0)) > Math.abs(adjustForIncline(getMotorSpeed(MotorPowers[3]*MotorStates[3], motorVoltage), 0)) ){
+			dist_left = adjustForIncline(getMotorSpeed(MotorPowers[2]*MotorStates[2], motorVoltage), 0) * wheel_radius;
+		}
+		else {
+			dist_left = adjustForIncline(getMotorSpeed(MotorPowers[3]*MotorStates[3], motorVoltage), 0) * wheel_radius;
+		}
+		
+		double distance = (dist_left + dist_right) / 2.0;
+		double angle = Math.atan((dist_right - dist_left) / axel_width);
+		WrapperEvents.moveRover(distance, angle);
+	}
+	
+	private double getMotorSpeed(int power, double bat_level){
+		if (power == 0){
+			return 0;
+		}
+		else {
+			return Math.PI;
+		}
+	}
+	
+	private double adjustForIncline(double speed, double incline) {
+		return speed;
+	}
+	
+	public boolean sendSerial(String mess){
 		char[] message = mess.toCharArray();
 		if (!mute){
 			int x = 0;
