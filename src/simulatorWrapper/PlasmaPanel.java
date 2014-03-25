@@ -21,7 +21,7 @@ public class PlasmaPanel extends JPanel {
 	private boolean painting = false;
 	
 	private int currentColorScheme = 0;
-	static final int REDtoGREEN = 0, BLACKtoWHITE = 1;
+	static final int REDtoGREEN = 0, BLACKtoWHITE = 1, BLUEtoWHITE = 2;
 	
 	private double ColorModifier;
 	
@@ -116,6 +116,14 @@ public class PlasmaPanel extends JPanel {
 		return values;
 	}
 	
+	public void setValues(double[][] vals){
+		values = vals;
+		minval = getMin();
+		maxval = getMax();
+		setColorMultipliers();
+		this.repaint();
+	}
+	
 	@Override
 	public void paintComponent(Graphics g) {
 		painting = true;
@@ -130,7 +138,7 @@ public class PlasmaPanel extends JPanel {
 							int z = 0;
 							while (z < targets.length){
 								if ((int)targets[z].getX() == x && (int)targets[z].getY() == y){
-									g.setColor(Color.BLUE);
+									g.setColor(Color.MAGENTA);
 									break;
 								}
 								z++;
@@ -143,6 +151,18 @@ public class PlasmaPanel extends JPanel {
 							g.setColor(getColor(values[x][y]));
 						}
 						g.fillRect(x * squareResolution, y * squareResolution, squareResolution, squareResolution);
+						switch (currentColorScheme){
+						case REDtoGREEN:
+							g.setColor(Color.DARK_GRAY);
+							break;
+						case BLACKtoWHITE:
+							g.setColor(new Color(240, 250, 0));
+							break;
+						case BLUEtoWHITE:
+							g.setColor(Color.BLACK);
+							break;
+						}
+						g.drawRect(x * squareResolution, y * squareResolution, squareResolution, squareResolution);
 						y++;
 					}
 					x++;
@@ -261,6 +281,9 @@ public class PlasmaPanel extends JPanel {
 		case BLACKtoWHITE:
 			int x = (int) Math.round((numb - minval) / maxval * 255);
 			return new Color(x, x, x);
+		case BLUEtoWHITE:
+			int y = (int) Math.round((numb - minval) / maxval * 255);
+			return new Color(y, y, 255);
 		default:
 			return null;
 		}

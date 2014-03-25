@@ -38,6 +38,7 @@ public class MapFrame extends JFrame {
 	private DecimalPoint roverLocation = new DecimalPoint();
 	private JRadioButtonMenuItem rdbtnmntmRedToGreen;
 	private JRadioButtonMenuItem rdbtnmntmBlackToWhite;
+	private JRadioButtonMenuItem rdbtnmntmBlueToWhite;
 
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -101,6 +102,7 @@ public class MapFrame extends JFrame {
 		rdbtnmntmRedToGreen.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				rdbtnmntmBlackToWhite.setSelected(false);
+				rdbtnmntmBlueToWhite.setSelected(false);
 				rdbtnmntmRedToGreen.setSelected(true);
 				PlasmaMap.setColorScheme(PlasmaPanel.REDtoGREEN);
 			}
@@ -112,11 +114,23 @@ public class MapFrame extends JFrame {
 		rdbtnmntmBlackToWhite.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				rdbtnmntmRedToGreen.setSelected(false);
+				rdbtnmntmBlueToWhite.setSelected(false);
 				rdbtnmntmBlackToWhite.setSelected(true);
 				PlasmaMap.setColorScheme(PlasmaPanel.BLACKtoWHITE);
 			}
 		});
 		mnColorScheme.add(rdbtnmntmBlackToWhite);
+		
+		rdbtnmntmBlueToWhite = new JRadioButtonMenuItem("Blue to White");
+		rdbtnmntmBlueToWhite.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				rdbtnmntmRedToGreen.setSelected(false);
+				rdbtnmntmBlackToWhite.setSelected(false);
+				rdbtnmntmBlueToWhite.setSelected(true);
+				PlasmaMap.setColorScheme(PlasmaPanel.BLUEtoWHITE);
+			}
+		});
+		mnColorScheme.add(rdbtnmntmBlueToWhite);
 		
 		JMenu mnMap = new JMenu("Map");
 		menuBar.add(mnMap);
@@ -125,9 +139,21 @@ public class MapFrame extends JFrame {
 		mnMap.add(mnLoadMap);
 		
 		JMenuItem mntmPlasmaMap = new JMenuItem("Plasma Map");
+		mntmPlasmaMap.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				mapValues = PlasmaMap.genorateLandscape(8, 0.05);
+				mapTargets = PlasmaMap.genorateTargets();
+				PlasmaMap.setTargets(mapTargets);
+			}
+		});
 		mnLoadMap.add(mntmPlasmaMap);
 		
 		JMenuItem mntmFlatMap = new JMenuItem("Flat Map");
+		mntmFlatMap.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				loadFlatMap();
+			}
+		});
 		mnLoadMap.add(mntmFlatMap);
 		
 		JMenuItem mntmFromFile = new JMenuItem("From File...");
@@ -135,6 +161,15 @@ public class MapFrame extends JFrame {
 		
 		JMenuItem mntmScaleTerrainVertical = new JMenuItem("Scale Terrain Vertical");
 		mnMap.add(mntmScaleTerrainVertical);
+		
+		JMenuItem mntmResetGenorateTargets = new JMenuItem("Regenorate Targets");
+		mntmResetGenorateTargets.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				mapTargets = PlasmaMap.genorateTargets();
+				PlasmaMap.setTargets(mapTargets);
+			}
+		});
+		mnMap.add(mntmResetGenorateTargets);
 		contentPane = new JPanel();
 		contentPane.setBackground(Color.BLACK);
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -150,41 +185,12 @@ public class MapFrame extends JFrame {
 		contentPane.add(RoverMarker);
 		
 		PlasmaMap = new PlasmaPanel();
-		mapValues = PlasmaMap.genorateLandscape(7, 0.1);
+		mapValues = PlasmaMap.genorateLandscape(8, 0.05);
 		mapTargets = PlasmaMap.genorateTargets();
 		PlasmaMap.setTargets(mapTargets);
 		contentPane.add(PlasmaMap);
 		PlasmaMap.setLocation(107, 44);
-		
-		this.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				//System.out.println("Keys");
-				Integer key = e.getKeyCode();
-				switch (key) {
-				case 39:
-					setRoverLocation(roverLocation.offset(10, 0));
-					//PlasmaMap.setLocation(PlasmaMap.getX() - 10, PlasmaMap.getY());
-					RoverMarker.setAngle(0);
-					break;
-				case 37:
-					setRoverLocation(roverLocation.offset(-10, 0));
-					//PlasmaMap.setLocation(PlasmaMap.getX() + 10, PlasmaMap.getY());
-					RoverMarker.setAngle(180);
-					break;
-				case 38:
-					setRoverLocation(roverLocation.offset(0, 10));
-					//PlasmaMap.setLocation(PlasmaMap.getX(), PlasmaMap.getY() + 10);
-					RoverMarker.setAngle(90);
-					break;
-				case 40:
-					setRoverLocation(roverLocation.offset(0, -10));
-					//PlasmaMap.setLocation(PlasmaMap.getX(), PlasmaMap.getY() - 10);
-					RoverMarker.setAngle(270);
-					break;
-				}
-			}
-		});
+
 		
 	}
 	
@@ -215,5 +221,27 @@ public class MapFrame extends JFrame {
 		PlasmaMap.setResolution(PlasmaMap.getResolution() + scale);
 		setRoverLocation(roverLocation);
 		this.repaint();	
+	}
+	
+	private void loadFlatMap(){
+		mapValues = new double[300][300];
+		int x = 0;
+		while (x < mapValues.length){
+			int y = 0;
+			while (y < mapValues[0].length){
+				mapValues[x][y] = 2;
+				y++;
+			}
+			x++;
+		}
+		mapValues[0][0] = 0;
+		mapValues[mapValues.length-1][mapValues[0].length-1] = 3;
+		mapTargets = PlasmaMap.genorateTargets();
+		PlasmaMap.setTargets(mapTargets);
+		PlasmaMap.setValues(mapValues);
+	}
+	
+	public double getIncline(){
+		return 0;
 	}
 }

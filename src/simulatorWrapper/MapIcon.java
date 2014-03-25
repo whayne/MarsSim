@@ -16,7 +16,10 @@ public class MapIcon extends JLabel{
 	private double Angle = 0;
 	
 	public void setAngle(double angle){
-		Angle = angle % 360;
+		Angle = Math.toDegrees(angle) % 360;
+		if (Angle < 0){
+			Angle += 360;
+		}
 		try {
 			ImageIcon img = new ImageIcon(MapFrame.class.getResource("/Rover Marker " + (int)(Angle - Angle%5) + ".png"));
 			img = resize(img, this.getWidth(), this.getHeight());
@@ -28,7 +31,7 @@ public class MapIcon extends JLabel{
 	}
 	
 	public double getAngle(){
-		return Angle;
+		return Math.toRadians(Angle);
 	}
 	
 	protected ImageIcon resize(Icon image, int width, int height) throws Exception {

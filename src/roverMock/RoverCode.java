@@ -90,39 +90,39 @@ public class RoverCode {
 		        data[index] = '\0';
 		        if (strcmp(data, "move") == 0){
 		          sendSerial("s r %");
+		          MotorStates[0] = FORWARD;
 		          MotorStates[1] = FORWARD;
 		          MotorStates[2] = FORWARD;
 		          MotorStates[3] = FORWARD;
-		          MotorStates[4] = FORWARD;
 		          delay(1000); //For ir sensor testing
 		        }        
 		        else if (strcmp(data, "stop") == 0){
 		          sendSerial("s r %");
+		          MotorStates[0] = RELEASE;
 		          MotorStates[1] = RELEASE;
 		          MotorStates[2] = RELEASE;
 		          MotorStates[3] = RELEASE;
-		          MotorStates[4] = RELEASE;
 		        }
 		        else if (strcmp(data, "spin_ccw") == 0) {
 		          sendSerial("s r %");
+		          MotorStates[0] = BACKWARD;
 		          MotorStates[1] = BACKWARD;
-		          MotorStates[2] = BACKWARD;
+		          MotorStates[2] = FORWARD;
 		          MotorStates[3] = FORWARD;
-		          MotorStates[4] = FORWARD;
 		        }
 		        else if (strcmp(data, "spin_cw") == 0) {
 		          sendSerial("s r %");
+		          MotorStates[0] = FORWARD;
 		          MotorStates[1] = FORWARD;
-		          MotorStates[2] = FORWARD;
+		          MotorStates[2] = BACKWARD;
 		          MotorStates[3] = BACKWARD;
-		          MotorStates[4] = BACKWARD;
 		        }
 		        else if (strcmp(data, "backward") == 0) {
 		          sendSerial("s r %");
+		          MotorStates[0] = BACKWARD;
 		          MotorStates[1] = BACKWARD;
 		          MotorStates[2] = BACKWARD;
 		          MotorStates[3] = BACKWARD;
-		          MotorStates[4] = BACKWARD;
 		        }
 		        else if (strcmp(data, "getvolts") == 0) {
 		          sendSerial("s r %");
@@ -302,6 +302,7 @@ public class RoverCode {
 		  }*/
 		} catch (Exception e) {
 			System.out.println("Error in Rover Run Code");
+			e.printStackTrace();
 		}
 		}
 	}
@@ -310,18 +311,17 @@ public class RoverCode {
 		double dist_left = 0;
 		double dist_right = 0;
 		if ( Math.abs(adjustForIncline(getMotorSpeed(MotorPowers[0]*MotorStates[0], motorVoltage), 0)) > Math.abs(adjustForIncline(getMotorSpeed(MotorPowers[1]*MotorStates[1], motorVoltage), 0)) ){
-			dist_left = adjustForIncline(getMotorSpeed(MotorPowers[0]*MotorStates[0], motorVoltage), 0) * wheel_radius;
+			dist_left = adjustForIncline(getMotorSpeed(MotorPowers[0]*MotorStates[0], motorVoltage), 0) * wheel_radius * time_step / 1000.0;
 		}
 		else {
-			dist_left = adjustForIncline(getMotorSpeed(MotorPowers[1]*MotorStates[1], motorVoltage), 0) * wheel_radius;
+			dist_left = adjustForIncline(getMotorSpeed(MotorPowers[1]*MotorStates[1], motorVoltage), 0) * wheel_radius * time_step / 1000.0;
 		}
 		if ( Math.abs(adjustForIncline(getMotorSpeed(MotorPowers[2]*MotorStates[2], motorVoltage), 0)) > Math.abs(adjustForIncline(getMotorSpeed(MotorPowers[3]*MotorStates[3], motorVoltage), 0)) ){
-			dist_left = adjustForIncline(getMotorSpeed(MotorPowers[2]*MotorStates[2], motorVoltage), 0) * wheel_radius;
+			dist_right = adjustForIncline(getMotorSpeed(MotorPowers[2]*MotorStates[2], motorVoltage), 0) * wheel_radius * time_step / 1000.0;
 		}
 		else {
-			dist_left = adjustForIncline(getMotorSpeed(MotorPowers[3]*MotorStates[3], motorVoltage), 0) * wheel_radius;
+			dist_right = adjustForIncline(getMotorSpeed(MotorPowers[3]*MotorStates[3], motorVoltage), 0) * wheel_radius * time_step / 1000.0;
 		}
-		
 		double distance = (dist_left + dist_right) / 2.0;
 		double angle = Math.atan((dist_right - dist_left) / axel_width);
 		WrapperEvents.moveRover(distance, angle);
@@ -331,8 +331,11 @@ public class RoverCode {
 		if (power == 0){
 			return 0;
 		}
+		else if (power > 0){
+			return Math.PI*2;
+		}
 		else {
-			return Math.PI;
+			return -2 * Math.PI;
 		}
 	}
 	
