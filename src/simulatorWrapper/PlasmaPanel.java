@@ -16,7 +16,7 @@ public class PlasmaPanel extends JPanel {
 	private double minval;
 	private double maxval;
 	private Random rnd = new Random();
-	private int squareResolution = 30;
+	private int squareResolution = 50;
 	
 	private boolean painting = false;
 	

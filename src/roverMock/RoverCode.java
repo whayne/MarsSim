@@ -332,10 +332,10 @@ public class RoverCode {
 			return 0;
 		}
 		else if (power > 0){
-			return Math.PI*2;
+			return Math.PI*3;
 		}
 		else {
-			return -2 * Math.PI;
+			return -3 * Math.PI;
 		}
 	}
 	
