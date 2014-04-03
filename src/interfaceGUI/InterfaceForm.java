@@ -22,6 +22,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.ListSelectionEvent;
 
 import objects.BackgroundImage;
+import objects.ThreadTimer;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
@@ -44,8 +45,17 @@ public class InterfaceForm extends JFrame {
 		ImageButton FolderBtn;
 		JComboBox PortSelectCombo;
 		JLabel MuteIcon;
+	JPanel StatusPnl;
+		JLabel StatusSatPowerLbl;
+		JProgressBar StatusSatPower;
+		JLabel StatusRoverPowerLbl;
+		JProgressBar StatusRoverPower;
+		JLabel StatusMotorPowerLbl;
+		JProgressBar StatusMotorPower;
+		JLabel StatusArmPowerLbl;
+		JProgressBar StatusArmPower;
 	JPanel RoverBtnsPnl;
-		ImageButton[] RoverBtns = new ImageButton[30];
+		ImageButton[] RoverBtns = new ImageButton[15];
 		JLabel RoverSendLbl;
 		JTextField RoverSendTxt;
 		JButton RoverSendBtn;
@@ -60,11 +70,32 @@ public class InterfaceForm extends JFrame {
 		JLabel SatAddLink;
 		JLabel SatEditLink;
 		JLabel SatDeleteLink;
+	JPanel InstructionsPnl;
+		JLabel ParametersLbl;
+		JLabel InstructionsLbl;
+		JLabel RoverCommandsLbl;
+		JLabel SatelliteCommandsLbl;
+		ZList RoverCommandsList;
+		ZList SatelliteCommandList;
+		ZList ParameterList;
+		ZList InstructionsList;		
+		JButton InstructionsSubmitBtn;
+		JButton InstructionsDeleteBtn;
+		JButton InstructionsEditBtn;
+		JButton InstructionsUpBtn;
+		JButton InstructionsDownBtn;
+		JLabel Divider;
+		JButton InstructionAddBtn;
+		JTextField ParameterTxt;
+		JLabel AddInstructionLink;
+		JLabel EditInstructionLink;
 	JTextArea SerialDisplayLbl;
 	JLabel ConnectionLbl;
 	ImageButton MinimizeBtn;
 	ImageButton ExitBtn;
 	JLabel VersionLbl;
+	JMenuItem OverrideMuteOptn;
+	private boolean CursorInMuteOptn = false;
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -88,12 +119,6 @@ public class InterfaceForm extends JFrame {
 	}
 
 	public InterfaceForm() {
-		addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentMoved(ComponentEvent arg0) {
-				//frame.setLocation(FrameLocation);
-			}
-		});
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent arg0) {
@@ -102,10 +127,12 @@ public class InterfaceForm extends JFrame {
 			@Override
 			public void windowOpened(WindowEvent arg0) {
 				InterfaceEvents.Window_Opened();
+				InterfaceEvents.CODE.initalize();
+				InterfaceEvents.CODE.resetConnection();
 			}
 		});
-		setIconImage(Toolkit.getDefaultToolkit().getImage(InterfaceForm.class.getResource("/Dish.png")));
-		setTitle("Mock Ground");
+		setIconImage(Toolkit.getDefaultToolkit().getImage(InterfaceForm.class.getResource("/Satelite.png")));
+		setTitle("Rover Control");
 		initalize();
 	}
 	
@@ -117,6 +144,35 @@ public class InterfaceForm extends JFrame {
 		contentPane.setBackground(Color.DARK_GRAY);
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
+		
+		OverrideMuteOptn = new JMenuItem("Override Mute");
+		OverrideMuteOptn.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseExited(MouseEvent arg0) {
+				CursorInMuteOptn = false;
+				new ThreadTimer(400, new Runnable(){
+					public void run(){
+						OverrideMuteOptn.setVisible(CursorInMuteOptn);
+					}
+				}, 1);
+			}
+			@Override
+			public void mouseEntered(MouseEvent arg0) {
+				CursorInMuteOptn = true;
+			}
+		});
+		OverrideMuteOptn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				OverrideMuteOptn.setVisible(false);
+				InterfaceEvents.CODE.muted = false;
+				MuteIcon.setVisible(false);
+			}
+		});
+		OverrideMuteOptn.setVisible(false);
+		OverrideMuteOptn.setFont(new Font("Bookman Old Style", Font.PLAIN, 13));
+		OverrideMuteOptn.setOpaque(true);
+		OverrideMuteOptn.setBounds(314, 100, 139, 22);
+		contentPane.add(OverrideMuteOptn);
 		
 		ProgramBtnsPnl = new JPanel();
 		ProgramBtnsPnl.setOpaque(false);
@@ -243,14 +299,23 @@ public class InterfaceForm extends JFrame {
 		ProgramBtnsPnl.add(PingBtn);
 		
 		MuteIcon = new JLabel(new ImageIcon(InterfaceForm.class.getResource("/Mute.png")));
+		MuteIcon.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				if (arg0.getButton() == 3){
+					OverrideMuteOptn.setLocation((int)arg0.getLocationOnScreen().getX() - 3, (int)arg0.getLocationOnScreen().getY() - 3);
+					OverrideMuteOptn.setVisible(true);
+				}
+			}
+		});
 		MuteIcon.setToolTipText("Cannot Send Messages");
-		MuteIcon.setVisible(false);
 		MuteIcon.setBounds(477, 51, 24, 24);
+		MuteIcon.setVisible(false);
 		ProgramBtnsPnl.add(MuteIcon);
 		
 		SerialDisplayLbl = new JTextArea();
 		SerialDisplayLbl.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		SerialDisplayLbl.setBounds(685, 85, 322, 299);
+		SerialDisplayLbl.setBounds(685, 122, 322, 420);
 		contentPane.add(SerialDisplayLbl);
 		SerialDisplayLbl.setLineWrap(true);
 		SerialDisplayLbl.setFont(new Font("Miriam Fixed", Font.PLAIN, 14));
@@ -341,6 +406,7 @@ public class InterfaceForm extends JFrame {
 			RoverBtns[x].setEnabled(false);
 			RoverBtns[x].setHorizontalTextPosition(SwingConstants.CENTER);
 			RoverBtns[x].setIcon(null);
+			RoverBtns[x].setMargin(3);
 			final int hold = x;
 			RoverBtns[x].addMouseListener(new MouseAdapter(){
 				@Override
@@ -357,7 +423,7 @@ public class InterfaceForm extends JFrame {
 		SatiliteBtnsPnl = new JPanel();
 		SatiliteBtnsPnl.setOpaque(false);
 		SatiliteBtnsPnl.setBounds(10, 224, 665, 123);
-		SatiliteBtnsPnl.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(192, 192, 192)), "Satilite Controls", TitledBorder.LEADING, TitledBorder.TOP, new Font("Iskoola Pota", Font.BOLD, 16), Color.WHITE));
+		SatiliteBtnsPnl.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(192, 192, 192)), "Satellite Controls", TitledBorder.LEADING, TitledBorder.TOP, new Font("Iskoola Pota", Font.BOLD, 16), Color.WHITE));
 		SatiliteBtnsPnl.setLayout(null);
 		contentPane.add(SatiliteBtnsPnl);
 		
@@ -438,6 +504,7 @@ public class InterfaceForm extends JFrame {
 			SatBtns[x].setEnabled(false);
 			SatBtns[x].setHorizontalTextPosition(SwingConstants.CENTER);
 			SatBtns[x].setIcon(null);
+			SatBtns[x].setMargin(3);
 			final int hold = x;
 			SatBtns[x].addMouseListener(new MouseAdapter(){
 				@Override
@@ -486,17 +553,290 @@ public class InterfaceForm extends JFrame {
 		});
 		contentPane.add(MinimizeBtn);
 		
-		VersionLbl = new JLabel("Health Prognostics Rover Project    CSM    v 2.1");
+		VersionLbl = new JLabel("Health Prognostics Rover Project    CSM    v 2.2");
 		VersionLbl.setHorizontalAlignment(SwingConstants.CENTER);
 		VersionLbl.setFont(new Font("Iskoola Pota", Font.PLAIN, 12));
 		VersionLbl.setForeground(Color.LIGHT_GRAY);
 		VersionLbl.setBounds(354, 553, 251, 14);
 		contentPane.add(VersionLbl);
 		
+		InstructionsPnl = new JPanel();
+		InstructionsPnl.setLayout(null);
+		InstructionsPnl.setOpaque(false);
+		InstructionsPnl.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(192, 192, 192)), "System Instructions", TitledBorder.LEADING, TitledBorder.TOP, new Font("Iskoola Pota", Font.BOLD, 16), Color.WHITE));
+		InstructionsPnl.setBounds(10, 358, 665, 184);
+		contentPane.add(InstructionsPnl);
+		
+		RoverCommandsList = new ZList();
+		RoverCommandsList.setSize(137, 134);
+		RoverCommandsList.setLocation(10, 39);
+		RoverCommandsList.addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent arg0) {
+				InterfaceEvents.RoverListChanged();
+			}
+		});
+		RoverCommandsList.setBackground(new Color(240, 240, 240));
+		InstructionsPnl.add(RoverCommandsList);
+		
+		SatelliteCommandList = new ZList();
+		SatelliteCommandList.setSize(137, 126);
+		SatelliteCommandList.setLocation(157, 47);
+		SatelliteCommandList.addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent e) {
+				InterfaceEvents.SatelliteListChanged();
+			}
+		});
+		SatelliteCommandList.setFont(new Font("Iskoola Pota", Font.PLAIN, 15));
+		SatelliteCommandList.setBackground(SystemColor.menu);
+		InstructionsPnl.add(SatelliteCommandList);
+		
+		ParameterTxt = new JTextField();
+		ParameterTxt.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentHidden(ComponentEvent arg0) {
+				ParameterTxt.setText("");
+				ParameterList.setSize(ParameterList.getWidth(), ParameterList.getHeight() + 27);
+			}
+			@Override
+			public void componentShown(ComponentEvent e) {
+				ParameterList.setSize(ParameterList.getWidth(), ParameterList.getHeight() - 27);
+			}
+		});
+		ParameterTxt.setVisible(false);
+		ParameterTxt.setFont(new Font("Iskoola Pota", Font.PLAIN, 14));
+		ParameterTxt.setBounds(304, 127, 137, 25);
+		InstructionsPnl.add(ParameterTxt);
+		
+		ParameterList = new ZList();
+		ParameterList.setSize(137, 69);
+		ParameterList.setLocation(304, 47);
+		ParameterList.addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent e) {
+				InterfaceEvents.ParametersListChanged();
+			}
+		});
+		ParameterList.setFont(new Font("Iskoola Pota", Font.PLAIN, 15));
+		ParameterList.setBackground(SystemColor.menu);
+		InstructionsPnl.add(ParameterList);
+		
+		InstructionsList = new ZList();
+		InstructionsList.setSize(117, 113);
+		InstructionsList.setLocation(451, 39);
+		InstructionsList.addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent e) {
+				InterfaceEvents.InstructionListChanged();
+			}
+		});
+		InstructionsList.setFont(new Font("Iskoola Pota", Font.PLAIN, 15));
+		InstructionsList.setBackground(Color.LIGHT_GRAY);
+		InstructionsPnl.add(InstructionsList);
+		
+		InstructionsSubmitBtn = new JButton("Submit");
+		InstructionsSubmitBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				InterfaceEvents.SubmitInstructionClicked();
+			}
+		});
+		InstructionsSubmitBtn.setEnabled(false);
+		InstructionsSubmitBtn.setOpaque(false);
+		InstructionsSubmitBtn.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 12));
+		InstructionsSubmitBtn.setBounds(451, 150, 117, 23);
+		InstructionsPnl.add(InstructionsSubmitBtn);
+		
+		InstructionsDeleteBtn = new JButton("Delete");
+		InstructionsDeleteBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				InterfaceEvents.InstructionModClicked(0);
+			}
+		});
+		InstructionsDeleteBtn.setEnabled(false);
+		InstructionsDeleteBtn.setOpaque(false);
+		InstructionsDeleteBtn.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 12));
+		InstructionsDeleteBtn.setBounds(569, 39, 100, 23);
+		InstructionsPnl.add(InstructionsDeleteBtn);
+		
+		InstructionsEditBtn = new JButton("Edit");
+		InstructionsEditBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				InterfaceEvents.InstructionModClicked(1);
+			}
+		});
+		InstructionsEditBtn.setEnabled(false);
+		InstructionsEditBtn.setOpaque(false);
+		InstructionsEditBtn.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 12));
+		InstructionsEditBtn.setBounds(569, 58, 100, 23);
+		InstructionsPnl.add(InstructionsEditBtn);
+		
+		InstructionsUpBtn = new JButton("Move Up");
+		InstructionsUpBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				InterfaceEvents.InstructionModClicked(2);
+			}
+		});
+		InstructionsUpBtn.setEnabled(false);
+		InstructionsUpBtn.setOpaque(false);
+		InstructionsUpBtn.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 12));
+		InstructionsUpBtn.setBounds(569, 73, 100, 23);
+		InstructionsPnl.add(InstructionsUpBtn);
+		
+		InstructionsDownBtn = new JButton("Move Down");
+		InstructionsDownBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				InterfaceEvents.InstructionModClicked(3);
+			}
+		});
+		InstructionsDownBtn.setEnabled(false);
+		InstructionsDownBtn.setOpaque(false);
+		InstructionsDownBtn.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 12));
+		InstructionsDownBtn.setBounds(569, 92, 100, 23);
+		InstructionsPnl.add(InstructionsDownBtn);
+		
+		RoverCommandsLbl = new JLabel("Rover Commands:");
+		RoverCommandsLbl.setForeground(Color.WHITE);
+		RoverCommandsLbl.setFont(new Font("Iskoola Pota", Font.PLAIN, 16));
+		RoverCommandsLbl.setBounds(10, 20, 117, 14);
+		InstructionsPnl.add(RoverCommandsLbl);
+		
+		SatelliteCommandsLbl = new JLabel("Satellite Commands:");
+		SatelliteCommandsLbl.setForeground(Color.WHITE);
+		SatelliteCommandsLbl.setFont(new Font("Iskoola Pota", Font.PLAIN, 16));
+		SatelliteCommandsLbl.setBounds(157, 20, 137, 14);
+		InstructionsPnl.add(SatelliteCommandsLbl);
+		
+		ParametersLbl = new JLabel("Parameters:");
+		ParametersLbl.setForeground(Color.WHITE);
+		ParametersLbl.setFont(new Font("Iskoola Pota", Font.PLAIN, 16));
+		ParametersLbl.setBounds(304, 21, 137, 14);
+		InstructionsPnl.add(ParametersLbl);
+		
+		InstructionsLbl = new JLabel("Instructions:");
+		InstructionsLbl.setForeground(Color.WHITE);
+		InstructionsLbl.setFont(new Font("Iskoola Pota", Font.PLAIN, 16));
+		InstructionsLbl.setBounds(451, 22, 117, 14);
+		InstructionsPnl.add(InstructionsLbl);
+		
+		Divider = new JLabel();
+		Divider.setOpaque(true);
+		Divider.setBackground(Color.GRAY);
+		Divider.setBounds(445, 20, 3, 200);
+		InstructionsPnl.add(Divider);
+		
+		InstructionAddBtn = new JButton("Add");
+		InstructionAddBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				InterfaceEvents.AddInstructionClicked();
+			}
+		});
+		InstructionAddBtn.setOpaque(false);
+		InstructionAddBtn.setFont(new Font("Lucida Sans Unicode", Font.PLAIN, 12));
+		InstructionAddBtn.setEnabled(false);
+		InstructionAddBtn.setBounds(304, 150, 137, 23);
+		InstructionsPnl.add(InstructionAddBtn);
+		
+		AddInstructionLink = new JLabel("<HTML><p align=\"right\"><U>Add<br>Instruction</U></p></HTML>");
+		AddInstructionLink.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		AddInstructionLink.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				InterfaceEvents.CODE.addInstructionToList();
+			}
+		});
+		AddInstructionLink.setHorizontalAlignment(SwingConstants.RIGHT);
+		AddInstructionLink.setForeground(Color.LIGHT_GRAY);
+		AddInstructionLink.setFont(new Font("Iskoola Pota", Font.PLAIN, 14));
+		AddInstructionLink.setBounds(579, 107, 65, 30);
+		InstructionsPnl.add(AddInstructionLink);
+		
+		EditInstructionLink = new JLabel("<HTML><p align=\"right\"><U>Edit<br>Instruction</U></p></HTML>");
+		EditInstructionLink.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		EditInstructionLink.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				InterfaceEvents.CODE.editInstructionInList();
+			}
+		});
+		EditInstructionLink.setEnabled(false);
+		EditInstructionLink.setHorizontalAlignment(SwingConstants.RIGHT);
+		EditInstructionLink.setForeground(Color.LIGHT_GRAY);
+		EditInstructionLink.setFont(new Font("Iskoola Pota", Font.PLAIN, 14));
+		EditInstructionLink.setBounds(578, 143, 65, 30);
+		InstructionsPnl.add(EditInstructionLink);
+				
+		StatusPnl = new JPanel();
+		StatusPnl.setLayout(null);
+		StatusPnl.setOpaque(false);
+		StatusPnl.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(192, 192, 192)), "Status", TitledBorder.LEADING, TitledBorder.TOP, new Font("Iskoola Pota", Font.BOLD, 16), Color.WHITE));
+		StatusPnl.setBounds(685, 11, 236, 85);
+		contentPane.add(StatusPnl);
+		
 		Background = new BackgroundImage();
 		Background.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Background.png")));
 		Background.setBounds(0, 0, 1007, 567);
 		contentPane.add(Background);
 		
+		JLabel label_1 = new JLabel("<HTML><U>Delete</U></HTML>");
+		label_1.setForeground(Color.LIGHT_GRAY);
+		label_1.setFont(new Font("Iskoola Pota", Font.PLAIN, 14));
+		label_1.setBounds(612, 81, 43, 14);
+		StatusPnl.add(label_1);
+		
+		JLabel label_2 = new JLabel("<HTML><U>Edit</U></HTML>");
+		label_2.setForeground(Color.LIGHT_GRAY);
+		label_2.setFont(new Font("Iskoola Pota", Font.PLAIN, 14));
+		label_2.setBounds(580, 81, 22, 14);
+		StatusPnl.add(label_2);
+		
+		JLabel label_3 = new JLabel("<HTML><U>Add</U></HTML>");
+		label_3.setForeground(Color.LIGHT_GRAY);
+		label_3.setFont(new Font("Iskoola Pota", Font.PLAIN, 14));
+		label_3.setBounds(548, 81, 22, 14);
+		StatusPnl.add(label_3);
+		
+		StatusSatPowerLbl = new JLabel("Satelite Power:");
+		StatusSatPowerLbl.setHorizontalAlignment(SwingConstants.RIGHT);
+		StatusSatPowerLbl.setForeground(Color.WHITE);
+		StatusSatPowerLbl.setFont(new Font("Iskoola Pota", Font.PLAIN, 14));
+		StatusSatPowerLbl.setBounds(10, 49, 84, 25);
+		StatusPnl.add(StatusSatPowerLbl);
+		
+		StatusSatPower = new JProgressBar();
+		StatusSatPower.setBounds(104, 54, 50, 20);
+		StatusPnl.add(StatusSatPower);
+		
+		StatusRoverPowerLbl = new JLabel("Rover Power:");
+		StatusRoverPowerLbl.setHorizontalAlignment(SwingConstants.RIGHT);
+		StatusRoverPowerLbl.setForeground(Color.WHITE);
+		StatusRoverPowerLbl.setFont(new Font("Iskoola Pota", Font.PLAIN, 14));
+		StatusRoverPowerLbl.setBounds(10, 20, 84, 25);
+		StatusPnl.add(StatusRoverPowerLbl);
+		
+		StatusRoverPower = new JProgressBar();
+		StatusRoverPower.setForeground(Color.RED);
+		StatusRoverPower.setBounds(104, 24, 50, 20);
+		StatusPnl.add(StatusRoverPower);
+		
+		StatusMotorPowerLbl = new JLabel("Motor Power:");
+		StatusMotorPowerLbl.setHorizontalAlignment(SwingConstants.RIGHT);
+		StatusMotorPowerLbl.setForeground(Color.WHITE);
+		StatusMotorPowerLbl.setFont(new Font("Iskoola Pota", Font.PLAIN, 14));
+		StatusMotorPowerLbl.setBounds(164, 20, 84, 25);
+		StatusPnl.add(StatusMotorPowerLbl);
+		
+		StatusMotorPower = new JProgressBar();
+		StatusMotorPower.setForeground(Color.RED);
+		StatusMotorPower.setBounds(258, 24, 50, 20);
+		StatusPnl.add(StatusMotorPower);
+		
+		StatusArmPowerLbl = new JLabel("Arm Power:");
+		StatusArmPowerLbl.setHorizontalAlignment(SwingConstants.RIGHT);
+		StatusArmPowerLbl.setForeground(Color.WHITE);
+		StatusArmPowerLbl.setFont(new Font("Iskoola Pota", Font.PLAIN, 14));
+		StatusArmPowerLbl.setBounds(164, 49, 84, 25);
+		StatusPnl.add(StatusArmPowerLbl);
+		
+		StatusArmPower = new JProgressBar();
+		StatusArmPower.setForeground(Color.RED);
+		StatusArmPower.setBounds(258, 53, 50, 20);
+		StatusPnl.add(StatusArmPower);
 	}
 }

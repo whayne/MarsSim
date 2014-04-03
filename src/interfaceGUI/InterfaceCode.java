@@ -45,7 +45,9 @@ public class InterfaceCode {
 	boolean deletingRover = false;
 	boolean editingSat = false;
 	boolean deletingSat = false;
-	boolean receivingPhoto = false;
+	boolean receivingFile = false;
+	boolean editingInstruction = false;
+	int editingCommand = -1;
 	
 	boolean listening = false;
 	String listenFor;
@@ -61,6 +63,8 @@ public class InterfaceCode {
 	String[][] actionTips = new String[2][30];
 	String[][] actionIcons = new String[2][30];
 	
+	InstructionObj[][] RoverInstructions;
+	InstructionObj[][] SatelliteInstructions;
 	
 	// SETUP
 	
@@ -153,29 +157,53 @@ public class InterfaceCode {
 		GUI.SerialDisplayLbl.setLocation(GUI.getWidth() - 10 - GUI.SerialDisplayLbl.getWidth(), GUI.ExitBtn.getBottom() + 10);
 		GUI.VersionLbl.setLocation((GUI.getWidth() - GUI.VersionLbl.getWidth()) / 2, GUI.getHeight() - GUI.VersionLbl.getHeight() - 3);
 		
-		GUI.RoverBtnsPnl.setBounds(10, GUI.ProgramBtnsPnl.getHeight() + 20, (int) (GUI.SerialDisplayLbl.getLocation().getX() - 20), 160 + GUI.RoverSendTxt.getHeight());
+		GUI.RoverBtnsPnl.setBounds(10, GUI.ProgramBtnsPnl.getHeight() + 20, (GUI.SerialDisplayLbl.getX() - 20), 20 + GUI.RoverBtns[0].getHeight() + 10 + GUI.RoverSendTxt.getHeight() + 10);
 		GUI.RoverSendLbl.setLocation(10, GUI.RoverBtnsPnl.getHeight() - 10 - GUI.RoverSendTxt.getHeight() + 4);
-		GUI.RoverSendTxt.setLocation(10 + GUI.RoverSendLbl.getWidth() + 5, (int) (GUI.RoverSendLbl.getLocation().getY() - 4));
-		GUI.RoverSendBtn.setLocation((int) (GUI.RoverSendTxt.getLocation().getX() + GUI.RoverSendTxt.getWidth() + 3), (int) GUI.RoverSendTxt.getLocation().getY());
-		GUI.RoverDeleteLink.setLocation(GUI.RoverBtnsPnl.getWidth() - 10 - GUI.RoverDeleteLink.getWidth(), (int) GUI.RoverSendLbl.getLocation().getY());
-		GUI.RoverEditLink.setLocation((int) (GUI.RoverDeleteLink.getLocation().getX() - 10 - GUI.RoverEditLink.getWidth()), (int) GUI.RoverSendLbl.getLocation().getY());
-		GUI.RoverAddLink.setLocation((int) (GUI.RoverEditLink.getLocation().getX() - 10 - GUI.RoverAddLink.getWidth()), (int) GUI.RoverSendLbl.getLocation().getY());
+		GUI.RoverSendTxt.setLocation(10 + GUI.RoverSendLbl.getWidth() + 5, (GUI.RoverSendLbl.getY() - 4));
+		GUI.RoverSendBtn.setLocation((GUI.RoverSendTxt.getX() + GUI.RoverSendTxt.getWidth() + 3), GUI.RoverSendTxt.getY());
+		GUI.RoverDeleteLink.setLocation(GUI.RoverBtnsPnl.getWidth() - 10 - GUI.RoverDeleteLink.getWidth(), GUI.RoverSendLbl.getY());
+		GUI.RoverEditLink.setLocation((GUI.RoverDeleteLink.getX() - 10 - GUI.RoverEditLink.getWidth()), GUI.RoverSendLbl.getY());
+		GUI.RoverAddLink.setLocation((GUI.RoverEditLink.getX() - 10 - GUI.RoverAddLink.getWidth()), GUI.RoverSendLbl.getY());
 		
-		GUI.SatiliteBtnsPnl.setBounds(10, 10 + GUI.ProgramBtnsPnl.getHeight() + 10 + GUI.RoverBtnsPnl.getHeight() + 10, GUI.RoverBtnsPnl.getWidth(), 160 + GUI.SatSendTxt.getHeight());
+		GUI.SatiliteBtnsPnl.setBounds(10, 10 + GUI.ProgramBtnsPnl.getHeight() + 10 + GUI.RoverBtnsPnl.getHeight() + 10, GUI.RoverBtnsPnl.getWidth(), 20 + GUI.SatBtns[0].getHeight() + 10 + GUI.SatSendTxt.getHeight() + 10);
 		GUI.SatSendLbl.setLocation(10, GUI.SatiliteBtnsPnl.getHeight() - 10 - GUI.SatSendTxt.getHeight() + 4);
-		GUI.SatSendTxt.setLocation(10 + GUI.SatSendLbl.getWidth() + 5, (int) (GUI.SatSendLbl.getLocation().getY() - 4));
-		GUI.SatSendBtn.setLocation((int) (GUI.SatSendTxt.getLocation().getX() + GUI.SatSendTxt.getWidth() + 3), (int) GUI.SatSendTxt.getLocation().getY());
-		GUI.SatDeleteLink.setLocation(GUI.SatiliteBtnsPnl.getWidth() - 10 - GUI.SatDeleteLink.getWidth(), (int) GUI.SatSendLbl.getLocation().getY());
-		GUI.SatEditLink.setLocation((int) (GUI.SatDeleteLink.getLocation().getX() - 10 - GUI.SatEditLink.getWidth()), (int) GUI.SatSendLbl.getLocation().getY());
-		GUI.SatAddLink.setLocation((int) (GUI.SatEditLink.getLocation().getX() - 10 - GUI.SatAddLink.getWidth()), (int) GUI.SatSendLbl.getLocation().getY());
+		GUI.SatSendTxt.setLocation(10 + GUI.SatSendLbl.getWidth() + 5, (GUI.SatSendLbl.getY() - 4));
+		GUI.SatSendBtn.setLocation((GUI.SatSendTxt.getX() + GUI.SatSendTxt.getWidth() + 3), GUI.SatSendTxt.getY());
+		GUI.SatDeleteLink.setLocation(GUI.SatiliteBtnsPnl.getWidth() - 10 - GUI.SatDeleteLink.getWidth(), GUI.SatSendLbl.getY());
+		GUI.SatEditLink.setLocation((GUI.SatDeleteLink.getX() - 10 - GUI.SatEditLink.getWidth()), GUI.SatSendLbl.getY());
+		GUI.SatAddLink.setLocation((GUI.SatEditLink.getX() - 10 - GUI.SatAddLink.getWidth()), GUI.SatSendLbl.getY());
 		
-		int spacing = (GUI.RoverBtnsPnl.getWidth() - 20 - 55 * (GUI.SatBtns.length / 2)) / (GUI.SatBtns.length / 2 - 1);
+		int spacing = (GUI.RoverBtnsPnl.getWidth() - 20 - 55 * (GUI.SatBtns.length)) / (GUI.SatBtns.length - 1);
 		int x = 0;
 		while (x < GUI.RoverBtns.length){
-			GUI.RoverBtns[x].setLocation(10 + (55 + spacing) * ((x + (GUI.RoverBtns.length / 2)) % (GUI.RoverBtns.length / 2)), 20 + 65 * (x / (GUI.RoverBtns.length / 2)));
-			GUI.SatBtns[x].setLocation(10 + (55 + spacing) * ((x + (GUI.RoverBtns.length / 2)) % (GUI.RoverBtns.length / 2)), 20 + 65 * (x / (GUI.RoverBtns.length / 2)));
+			GUI.RoverBtns[x].setLocation(10 + (55 + spacing) * ((x + (GUI.RoverBtns.length)) % (GUI.RoverBtns.length)), 20 + 65 * (x / (GUI.RoverBtns.length)));
+			GUI.SatBtns[x].setLocation(10 + (55 + spacing) * ((x + (GUI.RoverBtns.length)) % (GUI.RoverBtns.length)), 20 + 65 * (x / (GUI.RoverBtns.length)));
 			x++;
 		}
+		
+		GUI.InstructionsPnl.setLocation(10, GUI.SatiliteBtnsPnl.getY() + GUI.SatiliteBtnsPnl.getHeight() + 10);
+		GUI.InstructionsPnl.setSize(GUI.RoverBtnsPnl.getWidth(), GUI.VersionLbl.getY() - GUI.InstructionsPnl.getY() - 10);
+		GUI.RoverCommandsLbl.setLocation(10, 20);
+		GUI.InstructionsDeleteBtn.setLocation((GUI.InstructionsPnl.getWidth() - GUI.InstructionsDeleteBtn.getWidth() - 10), (GUI.RoverCommandsLbl.getY() + GUI.RoverCommandsLbl.getHeight() + 5));
+		GUI.InstructionsEditBtn.setLocation(GUI.InstructionsDeleteBtn.getX(), (GUI.InstructionsDeleteBtn.getY() + GUI.InstructionsDeleteBtn.getHeight()));
+		GUI.InstructionsUpBtn.setLocation(GUI.InstructionsDeleteBtn.getX(), (GUI.InstructionsEditBtn.getY() + GUI.InstructionsEditBtn.getHeight()));
+		GUI.InstructionsDownBtn.setLocation(GUI.InstructionsDeleteBtn.getX(), (GUI.InstructionsUpBtn.getY() + GUI.InstructionsUpBtn.getHeight()));
+		spacing = (GUI.InstructionsDeleteBtn.getX() - 10 - 10 * 3 - 10) / 4;
+		GUI.RoverCommandsList.setBounds(10, (GUI.RoverCommandsLbl.getY() + GUI.RoverCommandsLbl.getHeight() + 5), spacing, (GUI.InstructionsPnl.getHeight() - 20 - GUI.RoverCommandsLbl.getHeight() - 5 - 10));
+		GUI.SatelliteCommandsLbl.setLocation((10 + spacing + 10), 20);
+		GUI.SatelliteCommandList.setBounds(GUI.SatelliteCommandsLbl.getX(), GUI.RoverCommandsList.getY(), spacing, GUI.RoverCommandsList.getHeight());
+		GUI.ParametersLbl.setLocation((10 + (spacing + 10)*2), 20);
+		GUI.ParameterList.setBounds(GUI.ParametersLbl.getX(), GUI.RoverCommandsList.getY(), spacing, (GUI.RoverCommandsList.getHeight() - GUI.InstructionAddBtn.getHeight()));
+		GUI.InstructionAddBtn.setBounds(GUI.ParametersLbl.getX(), (GUI.ParameterList.getY() + GUI.ParameterList.getHeight()), spacing, GUI.InstructionAddBtn.getHeight());
+		GUI.ParameterTxt.setBounds(GUI.InstructionAddBtn.getX(), (GUI.InstructionAddBtn.getY() - 26), GUI.InstructionAddBtn.getWidth(), 25);
+		GUI.InstructionsLbl.setLocation((10 + (spacing + 10)*3 + 10), 20);
+		GUI.InstructionsList.setBounds(GUI.InstructionsLbl.getX(), GUI.RoverCommandsList.getY(), spacing, (GUI.RoverCommandsList.getHeight() - GUI.InstructionsSubmitBtn.getHeight()));
+		GUI.InstructionsSubmitBtn.setBounds(GUI.InstructionsList.getX(), (GUI.InstructionsList.getY() + GUI.InstructionsList.getHeight()), spacing, GUI.InstructionsSubmitBtn.getHeight()); 
+		GUI.Divider.setBounds((GUI.InstructionsLbl.getX() - 11), 25, 3, (GUI.InstructionsPnl.getHeight() - 25 - 15));
+		GUI.EditInstructionLink.setLocation(GUI.InstructionsDeleteBtn.getX() + GUI.InstructionsDeleteBtn.getWidth() - GUI.EditInstructionLink.getWidth(), GUI.InstructionsPnl.getHeight() - 20 - GUI.EditInstructionLink.getHeight());
+		GUI.AddInstructionLink.setLocation(GUI.EditInstructionLink.getX(), GUI.EditInstructionLink.getY() - 10 - GUI.AddInstructionLink.getHeight());
+		
+		GUI.StatusPnl.setBounds((GUI.ProgramBtnsPnl.getX() + GUI.ProgramBtnsPnl.getWidth() + 10), GUI.ProgramBtnsPnl.getY(), (GUI.RoverBtnsPnl.getWidth() - GUI.ProgramBtnsPnl.getWidth() - 10), GUI.ProgramBtnsPnl.getHeight());
 	}
 	
 	public void closeProgram(){
@@ -269,7 +297,7 @@ public class InterfaceCode {
 	}
 	
 	public void updateSerialCom(){
-		if (!receivingPhoto){
+		if (!receivingFile){
 			char[] input = readFromSerial().toCharArray();
 			if (input.length > 2){
 				if (input[0] == 'g'){
@@ -284,7 +312,7 @@ public class InterfaceCode {
 						// writeToLog("Recieved Note: " + data);
 					}
 					else if (input[2] == 'i'){
-						receivingPhoto = true;
+						receivingFile = true;
 						int filelength = Integer.parseInt(buildString(input, 4, input.length - 1));
 						if (filelength < 0){
 							filelength += 65536;
@@ -758,16 +786,55 @@ public class InterfaceCode {
 	}
 
 	
-	// FILE COMMUNICATION
+	// STATUS HANDLING
+	
+	public void setRoverPower(double voltage){
+		int precent = (int)Math.round((voltage / 9.0)*100);
+		GUI.StatusRoverPower.setValue(precent);
+		GUI.StatusRoverPower.setForeground(getPowerColor(precent));
+	}
+	
+	public void setSatellitePower(double voltage){
+		int precent = (int)Math.round((voltage / 9.0)*100);
+		GUI.StatusSatPower.setValue(precent);
+		GUI.StatusSatPower.setForeground(getPowerColor(precent));
+	}
+	
+	public void setMotorPower(double voltage){
+		int precent = (int)Math.round((voltage / 12.0)*100);
+		GUI.StatusMotorPower.setValue(precent);
+		GUI.StatusMotorPower.setForeground(getPowerColor(precent));
+	}
+	
+	public void setArmPower(double voltage){
+		int precent = (int)Math.round((voltage / 6.0)*100);
+		GUI.StatusArmPower.setValue(precent);
+		GUI.StatusArmPower.setForeground(getPowerColor(precent));
+	}
+		
+	private Color getPowerColor(int power){
+		if (power < 40){
+			return Color.RED;
+		}
+		else if (power < 80){
+			return Color.YELLOW;
+		}
+		else {
+			return Color.GREEN;
+		}
+	}
+	
+	
+	// FILE/PHOTO HANDLING
 	
 	private void ReadPhoto(int length){
-		if (receivingPhoto){
+		if (receivingFile){
 			GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Waiting for Image.\n");
 			try {
 				while (inputStream.available() <= 0) {}
 					Thread.sleep((int)(20 / Globals.getTimeScale()));
 					GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Receiving Image.\n");
-					// writeToLog("Receiving Image");
+					//writeToLog("Receiving Image");
 					String text = GUI.SerialDisplayLbl.getText();
 					byte[] bytes = new byte[length];
 					char[] progress = new char[length / 500 + 1];
@@ -797,7 +864,7 @@ public class InterfaceCode {
 							index++;
 						}
 						escape++;
-						if (escape > Integer.MAX_VALUE - 100){
+						if (escape > 1000000){
 							break;
 						}
 					}
@@ -808,13 +875,78 @@ public class InterfaceCode {
 						fos.write(bytes);
 						receivedFiles = Augment(receivedFiles, image.getAbsolutePath());
 						fos.close();
-						// writeToLog("Recieved Image.  Stored in: " + image.getAbsolutePath());
-						receivingPhoto = false;
+						//writeToLog("Recieved Image.  Stored in: " + image.getAbsolutePath());
+						receivingFile = false;
 						GUI.SerialDisplayLbl.setText(text + "Done.\n");
 						GUI.MailBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Mail_Message.png")));
 					}
 					else {
 						GUI.SerialDisplayLbl.setText(text + "Image transfer failed, incomplete size requirement.\n");
+						//writeToLog("Image transfer failed due to incomplete size requirement.");
+					}
+			}	
+			catch(Exception exe) {
+				exe.printStackTrace();
+			}
+		}
+	}
+	
+	private void ReadDataFile(int length){
+		if (receivingFile){
+			GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Waiting for Data.\n");
+			try {
+				while (inputStream.available() <= 0) {}
+					Thread.sleep((int)(20 / Globals.getTimeScale()));
+					GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Receiving Data.\n");
+					//writeToLog("Receiving Data File");
+					String text = GUI.SerialDisplayLbl.getText();
+					byte[] bytes = new byte[length];
+					char[] progress = new char[length / 100 + 1];
+					int index = 0;
+					while (index < progress.length){
+						progress[index] = '-';
+						index++;
+					}
+					progress[0] = '>';
+					GUI.SerialDisplayLbl.setText(text + buildString(progress, 0, progress.length - 1));
+					index = 0;
+					int escape = 0;
+					while (index < length){
+						while(inputStream.available() > 0) {
+							escape = 0;
+							try {
+								bytes[index] = (byte) inputStream.read();
+							}
+							catch (ArrayIndexOutOfBoundsException e){
+								break;
+							}
+							if (index % 100 == 0 && index != 0){
+								progress[index / 100 - 1] = '-';
+								progress[index / 100] = '>';
+								GUI.SerialDisplayLbl.setText(text + buildString(progress, 0, progress.length - 1));
+							}
+							index++;
+						}
+						escape++;
+						if (escape > 1000000){
+							break;
+						}
+					}
+					if (index == length){
+						File image = new File("");
+						image = new File(image.getAbsoluteFile() + "\\Data\\DATA " + DateTime.toString("MMddhhmm") + ".CSV");
+						FileOutputStream fos = new FileOutputStream(image);
+						fos.write(bytes);
+						receivedFiles = Augment(receivedFiles, image.getAbsolutePath());
+						fos.close();
+						//writeToLog("Recieved Data File.  Stored in: " + image.getAbsolutePath());
+						receivingFile = false;
+						GUI.SerialDisplayLbl.setText(text + "Done.\n");
+						GUI.MailBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Mail_Message.png")));
+					}
+					else {
+						GUI.SerialDisplayLbl.setText(text + "Data File transfer failed, incomplete size requirement.\n");
+						//writeToLog("Data File transfer failed due to incomplete size requirement.");
 					}
 			}	
 			catch(Exception exe) {
@@ -825,46 +957,89 @@ public class InterfaceCode {
 	
 	public void OpenRecievedFiles(){
 		if (receivedFiles.length > 0){
-			String[] choices = new String[receivedFiles.length];
-			int x = 0;
-			while (x < choices.length){
-				choices[x] = getFileName(receivedFiles[x]);
-				x++;
-			}
-			int choice = (new PopUp()).showOptionDialog("Select a File", "Open File", choices);
-			if (choice != -1){
-				File image = new File(receivedFiles[choice]);
-				try {
-					final BufferedImage img = ImageIO.read(image);
-					new ThreadTimer(0, new Runnable(){
-						public void run(){
-							PopUp opane = new PopUp();
-							opane.setCustomButtonOptions(new String[] { "Save", "Close" }, new int[] { 0, 1 });
-							int choice = opane.showPictureDialog(new ImageIcon(img), "Received Image", PopUp.CUSTOM_OPTIONS);
-							if (choice == 0){
-								javax.swing.JFileChooser browse = new javax.swing.JFileChooser();
-								browse.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("JPEG file", "jpg", "jpeg"));
-								browse.showSaveDialog(GUI);
-								try {
-									String filepath = browse.getSelectedFile().getAbsolutePath() + ".jpeg";
-									File imageOut = new File(filepath);
-									try {
-										ImageIO.write(img, "jpg", imageOut);
-									}
-									catch (Exception e){
-										opane.showConfirmDialog("Something went worng and the file failed to save.", "IO Error", PopUp.DEFAULT_OPTIONS);
-									}
-									
-								} catch (Exception e) {}								
-							}
-						}
-					}, 1);
-					receivedFiles = Remove(receivedFiles, choice);
-					if (receivedFiles.length == 0){
-						GUI.MailBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Mail.png")));
+			new ThreadTimer(0, new Runnable(){
+				public void run(){
+					String[] choices = new String[receivedFiles.length];
+					int x = 0;
+					while (x < choices.length){
+						choices[x] = getFileName(receivedFiles[x]);
+						x++;
 					}
-				} catch (Exception e) {}
-			}
+					int choice = (new PopUp()).showOptionDialog("Select a File", "Open File", choices);
+					if (choice != -1){
+						switch (getFileType(receivedFiles[choice])){
+						case ("jpg"):
+							File image = new File(receivedFiles[choice]);
+							try {
+								final BufferedImage img = ImageIO.read(image);
+								new ThreadTimer(0, new Runnable(){
+									public void run(){
+										PopUp opane = new PopUp();
+										opane.setCustomButtonOptions(new String[] { "Save", "Close" }, new int[] { 0, 1 });
+										int choice = opane.showPictureDialog(new ImageIcon(img), "Received Image", PopUp.CUSTOM_OPTIONS);
+										if (choice == 0){
+											javax.swing.JFileChooser browse = new javax.swing.JFileChooser();
+											browse.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("JPEG file", "jpg", "jpeg"));
+											browse.showSaveDialog(GUI);
+											try {
+												String filepath = browse.getSelectedFile().getAbsolutePath() + ".jpeg";
+												File imageOut = new File(filepath);
+												try {
+													ImageIO.write(img, "jpg", imageOut);
+												}
+												catch (Exception e){
+													opane.showConfirmDialog("Something went worng and the file failed to save.", "IO Error", PopUp.DEFAULT_OPTIONS);
+												}
+												
+											} catch (Exception e) {}								
+										}
+									}
+								}, 1);
+								receivedFiles = Remove(receivedFiles, choice);
+								if (receivedFiles.length == 0){
+									GUI.MailBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Mail.png")));
+								}
+							} catch (Exception e) {}
+							break;
+						case "CSV":
+							final String file = receivedFiles[choice];
+							new ThreadTimer(0, new Runnable(){
+								public void run(){
+									int choice = new CSVFrame().OpenCSVFile(file);
+									if (choice == 1){
+										javax.swing.JFileChooser browse = new javax.swing.JFileChooser();
+										browse.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Comma Seperated Value", "CSV"));
+										browse.showSaveDialog(GUI);
+										try {
+											String filepath = browse.getSelectedFile().getAbsolutePath() + ".CSV";
+											try {
+												String data = "";
+												FileReader input = new FileReader(file);
+												Scanner dataIn = new Scanner(input);
+												while (dataIn.hasNextLine()){
+													data += dataIn.nextLine() + "\n";
+												}
+												input.close();
+												PrintWriter dataOut = new PrintWriter(filepath);
+												dataOut.print(data);
+												dataOut.close();
+											}
+											catch (Exception e){
+												new PopUp().showConfirmDialog("Something went worng and the file failed to save.", "IO Error", PopUp.DEFAULT_OPTIONS);
+											}											
+										} catch (Exception e) {}								
+									}
+								}
+							}, 1);
+							receivedFiles = Remove(receivedFiles, choice);
+							if (receivedFiles.length == 0){
+								GUI.MailBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Mail.png")));
+							}
+							break;
+						}
+					}
+				}
+			}, 1);
 		}
 		else {
 			new ThreadTimer(0, new Runnable() {
@@ -892,7 +1067,277 @@ public class InterfaceCode {
 		}
 		return out;
 	}
+		
+	private String getFileType(String filename){
+		String out = "";
+		int x = filename.length() - 1;
+		while (x >= 0){
+			if (filename.charAt(x) == '.'){
+				break;
+			}
+			else {
+				out = filename.charAt(x) + out;
+			}
+			x--;
+		}
+		return out;
+	}
 	
+	
+	// INSTRUCTION STUFF
+	
+	public void SalelliteCommandChanged(){
+		if (GUI.SatelliteCommandList.getSelectedIndex() != -1){
+			GUI.RoverCommandsList.clearSelection();
+			setParametersList(SatelliteInstructions[GUI.SatelliteCommandList.getSelectedIndex()]);
+			GUI.EditInstructionLink.setEnabled(true);
+		}
+		else {
+			GUI.EditInstructionLink.setEnabled(false);
+		}
+	}
+	
+	public void RoverCommandChanged(){
+		if (GUI.RoverCommandsList.getSelectedIndex() != -1){
+			GUI.SatelliteCommandList.clearSelection();
+			setParametersList(RoverInstructions[GUI.RoverCommandsList.getSelectedIndex()]);
+			GUI.EditInstructionLink.setEnabled(true);
+		}	
+		else {
+			GUI.EditInstructionLink.setEnabled(false);
+		}
+	}
+	
+	private void setParametersList(InstructionObj[] instrcts){
+		GUI.ParameterTxt.setVisible(false);
+		GUI.ParameterList.setValues(instrcts);
+	}
+	
+	public void ParametersChanged(){
+		if (GUI.ParameterList.getSelectedIndex() != -1){
+			GUI.ParameterTxt.setVisible(((InstructionObj) GUI.ParameterList.getItemAt(GUI.ParameterList.getSelectedIndex())).getRequiresText());
+			GUI.InstructionAddBtn.setEnabled(true);
+		}
+		else {
+			GUI.ParameterTxt.setVisible(false);
+			GUI.InstructionAddBtn.setEnabled(false);
+		}
+	}
+	
+	public void AddInstruction(){
+		int where = -1;
+		if (editingInstruction){
+			where = GUI.InstructionsList.getSelectedIndex();
+			GUI.InstructionsList.removeValue(where);
+		}
+		if (!GUI.ParameterTxt.isVisible() || !GUI.ParameterTxt.getText().equals("")){
+			GUI.InstructionAddBtn.setEnabled(false);
+			InstructionObj newCmd = (InstructionObj) GUI.ParameterList.getSelectedItem();
+			if (GUI.RoverCommandsList.getSelectedIndex() != -1){
+				newCmd.setDestination('r');
+				newCmd.setTitle("R-" + (String)GUI.RoverCommandsList.getSelectedItem() + "-" + GUI.ParameterList.getSelectedItem().toString());
+				newCmd.setEditIndexies(GUI.RoverCommandsList.getSelectedIndex(), GUI.ParameterList.getSelectedIndex());
+			}
+			else {
+				newCmd.setDestination('s'); // Add a 'c' for command?
+				newCmd.setTitle("S-" + (String)GUI.SatelliteCommandList.getSelectedItem() + "-" + GUI.ParameterList.getSelectedItem().toString());
+				newCmd.setEditIndexies(GUI.SatelliteCommandList.getSelectedIndex(), GUI.ParameterList.getSelectedIndex());
+			}
+			if (GUI.ParameterTxt.isVisible()){
+				newCmd.fillParameter(GUI.ParameterTxt.getText());
+				newCmd.setTitle(newCmd.toString() + ":" + GUI.ParameterTxt.getText());
+			}
+			if (editingInstruction){
+				GUI.InstructionsList.addValue(newCmd, where);
+				GUI.SatelliteCommandList.clearSelection();
+				GUI.RoverCommandsList.clearSelection();
+				GUI.ParameterList.setValues(new String[0]);
+				GUI.InstructionsSubmitBtn.setEnabled(true);
+				GUI.InstructionsEditBtn.setEnabled(true);
+				GUI.InstructionsDeleteBtn.setEnabled(true);
+				GUI.InstructionsUpBtn.setEnabled(true);
+				GUI.InstructionsDownBtn.setEnabled(true);
+				GUI.InstructionsList.setEnabled(true);
+				editingInstruction = false;
+			}
+			else {
+				GUI.InstructionsList.addValue(newCmd);
+				GUI.SatelliteCommandList.clearSelection();
+				GUI.RoverCommandsList.clearSelection();
+				GUI.ParameterList.setValues(new String[0]);
+				GUI.InstructionsSubmitBtn.setEnabled(true);
+			}
+		}
+		else {
+			new ThreadTimer(0, new Runnable(){
+				public void run(){
+					(new PopUp()).showConfirmDialog("You must enter a typed value for the selected parameter parameter.", "Instruction Failed", PopUp.DEFAULT_OPTIONS);
+				}
+			}, 1);
+		}
+	}
+	
+	public void SendInstructions(){
+		String out = "";
+		for (Object val : GUI.InstructionsList.getItems()){
+			out += ((InstructionObj) val).buildCommand() + "\n";
+		}
+		out += "s report\nr report\n";
+		GUI.SatelliteCommandList.clearSelection();
+		GUI.RoverCommandsList.clearSelection();
+		GUI.ParameterList.setValues(new String[0]);
+		GUI.InstructionsList.setValues(new String[0]);
+		GUI.InstructionsSubmitBtn.setEnabled(false);
+		GUI.setCursor(new Cursor(Cursor.WAIT_CURSOR));
+		writeToSerial("s g }");
+		try {
+			Thread.sleep((int)(2000 / Globals.getTimeScale()));
+		} catch (Exception e) {}
+		writeToSerial("s c instructions");
+		try {
+			Thread.sleep((int)(1000 / Globals.getTimeScale()));
+		} catch (Exception e) {}
+		char[] instructChars = out.toCharArray();
+		int x = 0;
+		while (x < instructChars.length - 60){
+			writeToSerial(buildString(instructChars, x, x + 59));
+			try {
+				Thread.sleep((int)(2000 / Globals.getTimeScale()));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			x += 60;
+		}
+		writeToSerial(buildString(instructChars, x, instructChars.length - 1));
+		GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Done Sending Instructions\n");
+		GUI.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+	}
+	
+	
+	// EDIT INSTRUCTIONS
+	
+	public void editInstructionSendList(int how){
+		switch (how){
+		case 0:
+			GUI.InstructionsList.removeValue(GUI.InstructionsList.getSelectedIndex());
+			GUI.InstructionsList.clearSelection();
+			break;
+		case 1:
+			GUI.InstructionsSubmitBtn.setEnabled(false);
+			GUI.InstructionsEditBtn.setEnabled(false);
+			GUI.InstructionsDeleteBtn.setEnabled(false);
+			GUI.InstructionsUpBtn.setEnabled(false);
+			GUI.InstructionsDownBtn.setEnabled(false);
+			GUI.InstructionsList.setEnabled(false);
+			editingInstruction = true;
+			if (((InstructionObj) GUI.InstructionsList.getSelectedItem()).getDestination() == 'r'){
+				GUI.RoverCommandsList.setSelection(((InstructionObj) GUI.InstructionsList.getSelectedItem()).getEditIndexies()[0]);
+			}
+			else {
+				GUI.SatelliteCommandList.setSelection(((InstructionObj) GUI.InstructionsList.getSelectedItem()).getEditIndexies()[0]);
+			}
+			GUI.ParameterList.setSelection(((InstructionObj) GUI.InstructionsList.getSelectedItem()).getEditIndexies()[1]);
+			GUI.ParameterTxt.setText(((InstructionObj) GUI.InstructionsList.getSelectedItem()).getParameter());
+			break;
+		case 2:
+			Object hold = GUI.InstructionsList.getSelectedItem();
+			int where = GUI.InstructionsList.getSelectedIndex();
+			GUI.InstructionsList.removeValue(where);
+			GUI.InstructionsList.addValue(hold, where - 1);
+			GUI.InstructionsList.setSelection(where - 1);
+			break;
+		case 3:
+			Object hold1 = GUI.InstructionsList.getSelectedItem();
+			int where1 = GUI.InstructionsList.getSelectedIndex();
+			GUI.InstructionsList.removeValue(where1);
+			GUI.InstructionsList.addValue(hold1, where1 + 1);
+			GUI.InstructionsList.setSelection(where1 + 1);
+			break;
+		}
+	}
+	
+	public void addInstructionToList(){
+		new ThreadTimer(0, new Runnable(){
+			public void run(){
+				(new InstrucitonEditor()).open();
+			}
+		}, 1);
+	}
+	
+	public void addInstructionsToList2(boolean addRover, boolean addSat, String title, InstructionObj[] instruct){
+		if (editingCommand == -1){
+			if (addRover){
+				GUI.RoverCommandsList.addValue(title);
+				RoverInstructions = Augment(RoverInstructions, instruct.clone());
+			}
+			if (addSat){
+				GUI.SatelliteCommandList.addValue(title);
+				SatelliteInstructions = Augment(SatelliteInstructions, instruct.clone());
+			}
+		}
+		else {
+			if (addRover){
+				GUI.RoverCommandsList.removeValue(editingCommand);
+				GUI.RoverCommandsList.addValue(title, editingCommand);
+				RoverInstructions[editingCommand] = instruct.clone();
+			}
+			if (addSat){
+				GUI.SatelliteCommandList.removeValue(editingCommand);
+				GUI.SatelliteCommandList.addValue(title, editingCommand);
+				SatelliteInstructions[editingCommand] = instruct.clone();
+			}
+			editingCommand = -1;
+		}
+		GUI.ParameterList.setValues(new String[0]);
+		SaveProgrammer();
+	}
+	
+	public void editInstructionInList(){
+		if (GUI.RoverCommandsList.getSelectedIndex() != -1){
+			int selected = GUI.RoverCommandsList.getSelectedIndex();
+			String[] parameters = new String[RoverInstructions[selected].length];
+			String[][] commands = new String[parameters.length][];
+			boolean[] bools = new boolean[parameters.length];
+			int x = 0;
+			while (x < parameters.length){
+				parameters[x] = RoverInstructions[selected][x].toString();
+				commands[x] = RoverInstructions[selected][x].getCommands();
+				bools[x] = RoverInstructions[selected][x].getRequiresText();
+				x++;
+			}
+			editingCommand = selected;
+			final String[] finParam = parameters;
+			final String[][] finCommands = commands;
+			final boolean[] finBools = bools;
+			new ThreadTimer(0, new Runnable(){
+				public void run(){
+					(new InstrucitonEditor(true, false, (String)GUI.RoverCommandsList.getSelectedItem(), finParam, finCommands, finBools)).open();
+				}
+			}, 1);
+		}
+		if (GUI.SatelliteCommandList.getSelectedIndex() != -1){
+			int selected = GUI.SatelliteCommandList.getSelectedIndex();
+			String[] parameters = new String[GUI.SatelliteCommandList.getItems().length];
+			String[][] commands = new String[parameters.length][];
+			boolean[] bools = new boolean[parameters.length];
+			int x = 0;
+			while (x < parameters.length){
+				parameters[x] = SatelliteInstructions[selected][x].toString();
+				commands[x] = SatelliteInstructions[selected][x].getCommands();
+				bools[x] = SatelliteInstructions[selected][x].getRequiresText();
+				x++;
+			}
+			editingCommand = selected;
+			final String[] finParam = parameters;
+			final String[][] finCommands = commands;
+			final boolean[] finBools = bools;
+			new ThreadTimer(0, new Runnable(){
+				public void run(){
+					(new InstrucitonEditor(true, false, (String)GUI.SatelliteCommandList.getSelectedItem(), finParam, finCommands, finBools)).open();
+				}
+			}, 1);
+		}
+	}
 	
 	// FILE STUFF
 	
@@ -909,7 +1354,7 @@ public class InterfaceCode {
 		try {
 			fos = new FileOutputStream(filename);
 			out = new ObjectOutputStream(fos);
-			out.writeObject(new SaveFile(actionCommands, actionTips, actionIcons));
+			out.writeObject(new SaveFile(actionCommands, actionTips, actionIcons, GUI.RoverCommandsList.getListItems(), RoverInstructions, GUI.SatelliteCommandList.getListItems(), SatelliteInstructions));
 			out.close();
 		}
 		catch (Exception ex) {
@@ -967,6 +1412,17 @@ public class InterfaceCode {
 			out[x - 1] = array[x];
 			x++;
 		}
+		return out;
+	}
+	
+	private InstructionObj[][] Augment(InstructionObj[][] array, InstructionObj[] val){
+		InstructionObj[][] out = new InstructionObj[array.length+1][];
+		int x = 0;
+		while (x < array.length){
+			out[x] = array[x];
+			x++;
+		}
+		out[x] = val;
 		return out;
 	}
 	
