@@ -1,5 +1,7 @@
 package simulatorWrapper;
 
+import interfaceGUI.InterfaceEvents;
+
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
 
@@ -19,6 +21,13 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import javax.swing.JToggleButton;
+
+import roverMock.RoverEvents;
+import satelliteMock.SatelliteEvents;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class WrapperForm extends JFrame {
 
@@ -32,6 +41,10 @@ public class WrapperForm extends JFrame {
 	JLabel RoverAvailableLbl;
 	JLabel SatelliteAvailableLbl;
 	JLabel GroundAvailableLbl;
+	JToggleButton ViewGUITgl;
+	JToggleButton ViewMapTgl;
+	JToggleButton ViewRoverTgl;
+	JToggleButton ViewSatTgl;
 
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -161,5 +174,54 @@ public class WrapperForm extends JFrame {
 		lblAvailable.setFont(new Font("Bookman Old Style", Font.PLAIN, 12));
 		lblAvailable.setBounds(519, 20, 67, 14);
 		contentPane.add(lblAvailable);
+		
+		JLabel lblViewMultipleWindows = new JLabel("View Multiple Windows");
+		lblViewMultipleWindows.setFont(new Font("Bookman Old Style", Font.BOLD, 15));
+		lblViewMultipleWindows.setBounds(10, 244, 183, 19);
+		contentPane.add(lblViewMultipleWindows);
+		
+		ViewGUITgl = new JToggleButton("Interface");
+		ViewGUITgl.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				RoverEvents.setGUIVisible(ViewGUITgl.isSelected());
+			}
+		});
+		ViewGUITgl.setFont(new Font("Bookman Old Style", Font.PLAIN, 12));
+		ViewGUITgl.setSelected(true);
+		ViewGUITgl.setBounds(20, 274, 107, 23);
+		contentPane.add(ViewGUITgl);
+		
+		ViewMapTgl = new JToggleButton("Map");
+		ViewMapTgl.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				MapFrame.frame.setVisible(ViewMapTgl.isSelected());
+			}
+		});
+		ViewMapTgl.setSelected(true);
+		ViewMapTgl.setFont(new Font("Bookman Old Style", Font.PLAIN, 12));
+		ViewMapTgl.setBounds(137, 274, 107, 23);
+		contentPane.add(ViewMapTgl);
+		
+		ViewRoverTgl = new JToggleButton("Rover");
+		ViewRoverTgl.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				InterfaceEvents.setGUIVisible(ViewRoverTgl.isSelected());
+			}
+		});
+		ViewRoverTgl.setSelected(true);
+		ViewRoverTgl.setFont(new Font("Bookman Old Style", Font.PLAIN, 12));
+		ViewRoverTgl.setBounds(254, 275, 107, 23);
+		contentPane.add(ViewRoverTgl);
+		
+		ViewSatTgl = new JToggleButton("Satellite");
+		ViewSatTgl.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				SatelliteEvents.setGUIVisible(ViewSatTgl.isSelected());
+			}
+		});
+		ViewSatTgl.setSelected(true);
+		ViewSatTgl.setFont(new Font("Bookman Old Style", Font.PLAIN, 12));
+		ViewSatTgl.setBounds(371, 274, 107, 23);
+		contentPane.add(ViewSatTgl);
 	}
 }

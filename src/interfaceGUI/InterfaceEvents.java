@@ -10,6 +10,10 @@ public class InterfaceEvents {
 		simulatorWrapper.WrapperEvents.WindowOpened();
 	}
 	
+	public static void setGUIVisible(boolean b){
+		CODE.GUI.setVisible(b);
+	}
+	
 	static void COMPortChanged(){
 		CODE.changeCOMPort();
 	}

@@ -17,4 +17,8 @@ public class RoverEvents {
 			}
 		}, 1);
 	}
+	
+	public static void setGUIVisible(boolean b){
+		CODE.GUI.setVisible(b);
+	}
 }

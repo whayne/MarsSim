@@ -12,6 +12,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.Font;
 import javax.swing.JTextArea;
+import javax.swing.JScrollPane;
 
 public class SatelliteForm extends JFrame {
 
@@ -51,11 +52,14 @@ public class SatelliteForm extends JFrame {
 		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
 		
+		JScrollPane scrollPane = new JScrollPane();
+		contentPane.add(scrollPane, BorderLayout.CENTER);
+		
 		SerialHistoryLbl = new JTextArea();
+		scrollPane.setViewportView(SerialHistoryLbl);
 		SerialHistoryLbl.setFont(new Font("Bookman Old Style", Font.PLAIN, 13));
 		SerialHistoryLbl.setOpaque(false);
 		SerialHistoryLbl.setEditable(false);
-		contentPane.add(SerialHistoryLbl, BorderLayout.CENTER);
 	}
 
 }

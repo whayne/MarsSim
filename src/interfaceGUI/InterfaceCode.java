@@ -117,6 +117,22 @@ public class InterfaceCode {
 			actionTips = input.getTooltips();
 			actionIcons = input.getIcons();
 			UpdateActionBtns();
+			try {
+				input.getRoverOptions().clone();
+				GUI.RoverCommandsList.setValues(input.getRoverOptions());
+				RoverInstructions = input.getRoverInstructions();
+			}
+			catch (Exception e){
+				RoverInstructions = new InstructionObj[0][0];
+			}
+			try {
+				input.getSatelliteOptions().clone();
+				GUI.SatelliteCommandList.setValues(input.getSatelliteOptions());
+				SatelliteInstructions = input.getSatelliteInstructions();
+			}
+			catch (Exception e){
+				SatelliteInstructions = new InstructionObj[0][0];
+			}
 			in.close();
 		} 
 		catch (FileNotFoundException e){
@@ -128,6 +144,8 @@ public class InterfaceCode {
 				actionTips[1][x] = "";
 				actionIcons[0][x] = "";
 				actionIcons[1][x] = "";
+				RoverInstructions = new InstructionObj[0][0];
+				SatelliteInstructions = new InstructionObj[0][0];
 				x++;
 			}
 		}
@@ -267,9 +285,7 @@ public class InterfaceCode {
 			int x = 0;
 			while (x < output.length){
 				Globals.writeToSerial(output[x], 'g'); // Write to Serial one char at a time
-				try {
-					Thread.sleep((int)(20 / Globals.getTimeScale())); // Pause for sending
-				} catch (InterruptedException e) {}
+				delay(20); // Pause for sending
 				x++;
 			}
 		}
@@ -288,9 +304,7 @@ public class InterfaceCode {
 			int x = 0;
 			while (x < output.length){
 				Globals.writeToSerial(output[x], 'g'); // Write to Serial one char at a time
-				try {
-					Thread.sleep((int)(20 / Globals.getTimeScale())); // Pause for sending
-				} catch (InterruptedException e) {}
+				delay(20); // Pause for sending
 				x++;
 			}
 		}
@@ -339,35 +353,29 @@ public class InterfaceCode {
 	
 	private String readFromSerial(){
 		if (!connectedPort.equals("")){
-			try {
-					//if (inputStream.available() > 0){
-				if (Globals.RFAvailable('g') > 0){
-					// System.out.println("Available");
-					Thread.sleep((int)(20 / Globals.getTimeScale()));
-					String out = "";
-						//while(inputStream.available() > 0) {
-					while (Globals.RFAvailable('g') > 0) {
-							//out += (char)(inputStream.read());
-						out += (char)Globals.ReadSerial('g');
+			//if (inputStream.available() > 0){
+			if (Globals.RFAvailable('g') > 0){
+				// System.out.println("Available");
+				int hold = 0;
+				while (hold != Globals.RFAvailable('g')){
+					hold = Globals.RFAvailable('g');
+					delay(7);
+				}
+				String out = "";
+					//while(inputStream.available() > 0) {
+				while (Globals.RFAvailable('g') > 0) {
+						//out += (char)(inputStream.read());
+					out += (char)Globals.ReadSerial('g');
+				}
+				if (listening){
+					if (out.equals(listenFor)){
+						new ThreadTimer(0, listenAction, 1);
 					}
-					if (listening){
-						if (out.equals(listenFor)){
-							new ThreadTimer(0, listenAction, 1);
-						}
-					}
-					return out;
 				}
-				else {
-					return "";
-				}
-			}	
-			catch(Exception exe) {
-				if (connectedPort.equals("")){
-					return "";
-				}
-				else {
-					return "Data Could Not be Parsed\n";
-				}
+				return out;
+			}
+			else {
+				return "";
 			}
 		}
 		else {
@@ -832,7 +840,7 @@ public class InterfaceCode {
 			GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Waiting for Image.\n");
 			try {
 				while (inputStream.available() <= 0) {}
-					Thread.sleep((int)(20 / Globals.getTimeScale()));
+					delay(20);
 					GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Receiving Image.\n");
 					//writeToLog("Receiving Image");
 					String text = GUI.SerialDisplayLbl.getText();
@@ -896,7 +904,7 @@ public class InterfaceCode {
 			GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Waiting for Data.\n");
 			try {
 				while (inputStream.available() <= 0) {}
-					Thread.sleep((int)(20 / Globals.getTimeScale()));
+					delay(20);
 					GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Receiving Data.\n");
 					//writeToLog("Receiving Data File");
 					String text = GUI.SerialDisplayLbl.getText();
@@ -1190,22 +1198,14 @@ public class InterfaceCode {
 		GUI.InstructionsSubmitBtn.setEnabled(false);
 		GUI.setCursor(new Cursor(Cursor.WAIT_CURSOR));
 		writeToSerial("s g }");
-		try {
-			Thread.sleep((int)(2000 / Globals.getTimeScale()));
-		} catch (Exception e) {}
+		delay(2000);
 		writeToSerial("s c instructions");
-		try {
-			Thread.sleep((int)(1000 / Globals.getTimeScale()));
-		} catch (Exception e) {}
+		delay(1000);
 		char[] instructChars = out.toCharArray();
 		int x = 0;
 		while (x < instructChars.length - 60){
 			writeToSerial(buildString(instructChars, x, x + 59));
-			try {
-				Thread.sleep((int)(2000 / Globals.getTimeScale()));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			delay(2000);
 			x += 60;
 		}
 		writeToSerial(buildString(instructChars, x, instructChars.length - 1));
@@ -1426,6 +1426,14 @@ public class InterfaceCode {
 		return out;
 	}
 	
+	private void delay(int length){
+		try {
+			Thread.sleep((int)(length / Globals.getTimeScale()));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void HandleError(Exception e){
 		e.printStackTrace();
 		JOptionPane.showConfirmDialog(GUI, "The program broke, restart and tell Zac.", "A Fatal Error Occured", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
@@ -1435,6 +1443,5 @@ public class InterfaceCode {
 			// LogFile.write(System.getProperty("line.separator"));
 		//} catch (IOException e1) {}
 		System.exit(0);
-		
 	}
 }
