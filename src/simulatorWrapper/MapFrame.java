@@ -39,6 +39,8 @@ public class MapFrame extends JFrame {
 	private JRadioButtonMenuItem rdbtnmntmRedToGreen;
 	private JRadioButtonMenuItem rdbtnmntmBlackToWhite;
 	private JRadioButtonMenuItem rdbtnmntmBlueToWhite;
+	private int panShiftX = 0;
+	private int panShiftY = 0;
 
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -185,24 +187,57 @@ public class MapFrame extends JFrame {
 		contentPane.add(RoverMarker);
 		
 		PlasmaMap = new PlasmaPanel();
-		mapValues = PlasmaMap.genorateLandscape(8, 0.05);
+		mapValues = PlasmaMap.genorateLandscape(7, 0.05);
 		mapTargets = PlasmaMap.genorateTargets();
 		PlasmaMap.setTargets(mapTargets);
 		contentPane.add(PlasmaMap);
 		PlasmaMap.setLocation(107, 44);
 
-		
+		this.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				Integer key = e.getKeyCode();
+				switch (key) {
+				case 39:
+					panShiftX = panShiftX - PlasmaMap.getResolution();
+					redraw();
+					break;
+				case 37:
+					panShiftX = panShiftX + PlasmaMap.getResolution();
+					redraw();
+					break;
+				case 38:
+					panShiftY = panShiftY + PlasmaMap.getResolution();
+					redraw();
+					break;
+				case 40:
+					panShiftY = panShiftY - PlasmaMap.getResolution();
+					redraw();
+					break;
+				case 32:
+					panShiftX = 0;
+					panShiftY = 0;
+					redraw();
+					break;
+				}
+			}
+		});
 	}
 	
 	private void resized(){
-		RoverMarker.setLocation((this.getWidth() / 2), (this.getHeight() / 2));
+		redraw();
 		setRoverLocation(roverLocation);
 	}
 
+	public void redraw(){
+		RoverMarker.setLocation((this.getWidth() / 2 + panShiftX), (this.getHeight() / 2 + panShiftY));
+		Point pointOnScreen = roverLocation.scale(PlasmaMap.getResolution()/100.0).toPoint();
+		PlasmaMap.setLocation((int)((this.getWidth() - PlasmaMap.getWidth()) / 2 - pointOnScreen.getX()) + panShiftX, (int)((this.getHeight() - PlasmaMap.getHeight()) / 2 + pointOnScreen.getY()) + panShiftY);
+	}
+	
 	public void setRoverLocation(DecimalPoint loc){
 		roverLocation = loc;
-		Point pointOnScreen = roverLocation.scale(PlasmaMap.getResolution()/100.0).toPoint();
-		PlasmaMap.setLocation((int)((this.getWidth() - PlasmaMap.getWidth()) / 2 - pointOnScreen.getX()), (int)((this.getHeight() - PlasmaMap.getHeight()) / 2 + pointOnScreen.getY()));
+		redraw();
 	}
 	
 	public DecimalPoint getRoverLocation(){
@@ -218,9 +253,11 @@ public class MapFrame extends JFrame {
 	}
 	
 	private void zoom(int scale){
+		panShiftX = 0;
+		panShiftY = 0;
 		PlasmaMap.setResolution(PlasmaMap.getResolution() + scale);
 		setRoverLocation(roverLocation);
-		this.repaint();	
+		redraw();
 	}
 	
 	private void loadFlatMap(){

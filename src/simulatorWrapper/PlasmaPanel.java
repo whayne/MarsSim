@@ -126,14 +126,31 @@ public class PlasmaPanel extends JPanel {
 	
 	@Override
 	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
 		painting = true;
+		int xstart = -(this.getLocation().x / squareResolution) - 2;
+		if (xstart < 0){
+			xstart = 0;
+		}
+		int xend = xstart + (this.getParent().getWidth() / squareResolution) + 5;
+		if (xend > values.length){
+			xend = values.length;
+		}
+		int ystart = -(this.getLocation().y / squareResolution) - 2;
+		if (ystart < 0){
+			ystart = 0;
+		}
+		int yend = ystart + (this.getParent().getHeight() / squareResolution) + 5;
+		if (yend > values[0].length){
+			yend = values[0].length;
+		}
 		try { 
 			if (values.length > 0){
 				this.setSize(values.length*squareResolution, values[0].length*squareResolution);
-				int x = 0;
-				while (x < values.length){
-					int y = 0;
-					while (y < values[0].length){
+				int x = xstart;
+				while (x < xend){
+					int y = ystart;
+					while (y < yend){
 						try {
 							int z = 0;
 							while (z < targets.length){
@@ -166,7 +183,7 @@ public class PlasmaPanel extends JPanel {
 						y++;
 					}
 					x++;
-				}	
+				}
 			}
 		} catch (Exception e) {}
 		painting = false;
@@ -182,7 +199,7 @@ public class PlasmaPanel extends JPanel {
 	}
 	
 	public Point[] genorateTargets(){
-		Point[] targets = new Point[rnd.nextInt(10) + 7];
+		Point[] targets = new Point[(int)Math.pow(rnd.nextInt(6) + 4, 2)];
 		int x = 0;
 		while (x < targets.length){
 			targets[x] = new Point(rnd.nextInt(values.length), rnd.nextInt(values.length));
