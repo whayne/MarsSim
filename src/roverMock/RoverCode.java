@@ -149,6 +149,7 @@ public class RoverCode {
 							else if (strcmp(data, "instructions") == 0) {
 								instructions = "";
 								while (Globals.RFAvailable('r') == 0) {
+									delay(5);
 								}
 								delay(1000);
 								while (Globals.RFAvailable('r') > 0) {
@@ -184,6 +185,9 @@ public class RoverCode {
 						index = 0;
 						tag = '\0';
 						timeSinceCmd = System.currentTimeMillis();
+						if (moving){
+					        waitTime += System.currentTimeMillis() + 60000;
+						}
 					} 
 					else {
 						delay(300);
@@ -200,14 +204,14 @@ public class RoverCode {
 				}
 
 				if (System.currentTimeMillis() - timeSinceCmd > 60000 && hasInstructions && !mute) {
-					if (!waiting || (System.currentTimeMillis() - waitTime < 1000)) {
-						// digitalWrite(instructLED, HIGH);
+					if (!waiting || (System.currentTimeMillis() - waitTime > 1000)) {
+						waiting = false;
 						String cmd = "";
 						int x = 0;
 						int count = 0;
 						while (count <= instructsComplete) {
 							cmd = "";
-							while (instructions.charAt(x + 1) != '\n') {
+							while (instructions.charAt(x) != '\n') {
 								cmd += instructions.charAt(x);
 								x++;
 							}
@@ -215,7 +219,14 @@ public class RoverCode {
 							count++;
 						}
 						if (cmd.charAt(0) == 'r') {
-							cmd.replaceFirst("r ", "");
+							String temp = cmd;
+							cmd = "";
+							x = 2;
+							while (x < temp.length()){
+								cmd += temp.charAt(x);
+								x++;
+							}
+							// System.out.println(cmd + " - " + System.currentTimeMillis());
 							if (cmd.equals("move")) {
 								MotorStates[0] = FORWARD;
 								MotorStates[1] = FORWARD;
@@ -257,22 +268,23 @@ public class RoverCode {
 							} 
 							else if (cmd.equals("photo")) {
 								// takePicture();
-							} 
+							}
 							else if (cmd.equals("delay1")) {
 								waiting = true;
 								waitTime = System.currentTimeMillis();
-							} 
+							}
 							else if (cmd.equals("report")) {
 								if (sendSerial("s r n Rover Instructs Done")) {
 									hasInstructions = false;
 									instructsComplete = 0;
-								} 
+								}
 								else {
 									instructsComplete--;
 								}
 							}
 						}
 						instructsComplete++;
+						delay(5);
 					}
 					else if (waiting){
 					   if (moving){
@@ -396,7 +408,7 @@ public class RoverCode {
 				Globals.writeToSerial(message[x], 'r'); // Write to Serial one
 														// char at a time
 				try {
-					Thread.sleep((int) (20 / Globals.getTimeScale())); // Pause
+					Thread.sleep((int) (5 / Globals.getTimeScale())); // Pause
 																		// for
 																		// sending
 				} catch (InterruptedException e) {

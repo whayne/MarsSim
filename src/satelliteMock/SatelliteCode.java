@@ -16,11 +16,11 @@ public class SatelliteCode {
 
 	static void align(){
 		GUI = SatelliteForm.frame;
-	}
-	
+	}	
 
 	private final int SDpin = 4;
 
+	private String instructions = "";
 	private boolean hasInstructions = false;
 	private int instructsComplete = 0;
 	private long timeSinceCmd = 0;
@@ -29,7 +29,7 @@ public class SatelliteCode {
 	private File imgFile;
 	private File myFile;
 	private char[] filename = new char[13];
-
+	
 	private char[] data = new char[30];
 	private int index = 2;
 	private char tag = '\0';
@@ -139,22 +139,20 @@ public class SatelliteCode {
 							}*/
 						}
 						else if (strcmp(data, "instructions") == 0){
-							/*if (SD.exists("instruct.txt")){
-								SD.remove("instruct.txt");
+							instructions = "";
+							while (Globals.RFAvailable('s') == 0) {
+								delay(5);
 							}
-							myFile = SD.open("instruct.txt", FILE_WRITE);
-							if (!myFile){
-								sendSerial("g n File Failed to Open");
-							}
-							while (Globals.RFAvailable('s') == 0) {}
 							delay(1000);
 							while (Globals.RFAvailable('s') > 0){
 								while (Globals.RFAvailable('s') > 0){
-									myFile.write((char)Globals.ReadSerial('s'));
+									instructions += (char)Globals.ReadSerial('s');
+									try {
+										Thread.sleep(1);
+									} catch (Exception e) {}
 								}
 								delay(2000);
 							}
-							myFile.close();
 							hasInstructions = true;
 							instructsComplete = 0;
 							sendSerial("g }");
@@ -163,16 +161,16 @@ public class SatelliteCode {
 							delay(700);
 							sendSerial("r instructions");
 							delay(1000);
-							myFile = SD.open("instruct.txt", FILE_READ);
-							while (myFile.available()) {
+							int x = 0;
+							while (x < instructions.length()) {
 								index = 0;
-								while ((index < 60) && (myFile.available())){
-									Serial.write((char)myFile.read());
+								while ((index < 60) && (x < instructions.length())){
+									Globals.writeToSerial(instructions.charAt(x), 's');
 									index++;
+									x++;
 								}
 								delay(2000);
 							}
-							myFile.close();*/
 						}
 						else {
 							//sendSerial("\nrecieved: ");
@@ -192,34 +190,32 @@ public class SatelliteCode {
 				}
 			}
 			
-			/*if (millis() - timeSinceCmd > 60000 && hasInstructions){
-				myFile = SD.open("instruct.txt", FILE_READ);
-				char* cmd;
+			if (System.currentTimeMillis() - timeSinceCmd > 60000 && hasInstructions){
+				String cmd = "";
 				int x = 0;
 				int count = 0;
 				while (count <= instructsComplete){
-					cmd = new char[20];
-					x = 0;
-					while (myFile.peek() != '\n'){
-						cmd[x] = myFile.read();
+					cmd = "";
+					while (instructions.charAt(x) != '\n'){
+						cmd += instructions.charAt(x);
 						x++;
 					}
-					cmd[x] = '\0';
-					myFile.read();
+					x++;
 					count++;
 				}
 				
-				if (cmd[0] == 's'){
-					x = 0;
-					while (x < strlen(cmd)-2){
-						cmd[x] = cmd[x+2];
+				if (cmd.charAt(0) == 's'){
+					String temp = cmd;
+					cmd = "";
+					x = 2;
+					while (x < temp.length()){
+						cmd += temp.charAt(x);
 						x++;
 					}
-					cmd[x] = '\0';
-					if (strcmp(cmd, "photo") == 0){
-	         // 	takePicture();
+					if (cmd.equals("photo")){
+						// 	takePicture();
 					}
-					else if (strcmp(cmd, "report") == 0){
+					else if (cmd.equals("report")){
 						if (sendSerial("g n Sat Instructs Done")) {
 							hasInstructions = false;
 							instructsComplete = 0;
@@ -230,8 +226,7 @@ public class SatelliteCode {
 					}
 				}
 				instructsComplete++;
-				myFile.close();
-			}*/
+			}
 			}
 			catch (Exception e){
 				System.out.println("Error in Satellite Code");
@@ -321,7 +316,7 @@ public class SatelliteCode {
 			Globals.writeToSerial(message[x], 's'); // Write to Serial one char at a time
 			print += message[x];
 			try {
-				Thread.sleep((int)(20 / Globals.getTimeScale())); // Pause for sending
+				Thread.sleep((int)(5 / Globals.getTimeScale())); // Pause for sending
 			} catch (InterruptedException e) {}
 			x++;
 		}

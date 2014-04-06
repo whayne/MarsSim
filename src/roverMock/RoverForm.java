@@ -3,6 +3,7 @@ package roverMock;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Font;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -11,6 +12,7 @@ import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.JTextArea;
+import javax.swing.JScrollPane;
 
 public class RoverForm extends JFrame {
 
@@ -37,9 +39,6 @@ public class RoverForm extends JFrame {
 		});
 	}
 
-	/**
-	 * Create the frame.
-	 */
 	public RoverForm() {
 		addWindowListener(new WindowAdapter() {
 			@Override
@@ -56,10 +55,14 @@ public class RoverForm extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(new BorderLayout(0, 0));
 		
+		JScrollPane scrollPane = new JScrollPane();
+		contentPane.add(scrollPane, BorderLayout.CENTER);
+		
 		SerialHistoryLbl = new JTextArea();
+		scrollPane.setViewportView(SerialHistoryLbl);
 		SerialHistoryLbl.setOpaque(false);
 		SerialHistoryLbl.setEditable(false);
-		contentPane.add(SerialHistoryLbl, BorderLayout.CENTER);
+		SerialHistoryLbl.setFont(new Font("Bookman Old Style", Font.PLAIN, 13));
 	}
 
 }
