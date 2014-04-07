@@ -183,7 +183,7 @@ public class WrapperForm extends JFrame {
 		ViewGUITgl = new JToggleButton("Interface");
 		ViewGUITgl.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				RoverEvents.setGUIVisible(ViewGUITgl.isSelected());
+				InterfaceEvents.setGUIVisible(ViewGUITgl.isSelected());
 			}
 		});
 		ViewGUITgl.setFont(new Font("Bookman Old Style", Font.PLAIN, 12));
@@ -205,7 +205,7 @@ public class WrapperForm extends JFrame {
 		ViewRoverTgl = new JToggleButton("Rover");
 		ViewRoverTgl.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				InterfaceEvents.setGUIVisible(ViewRoverTgl.isSelected());
+				RoverEvents.setGUIVisible(ViewRoverTgl.isSelected());
 			}
 		});
 		ViewRoverTgl.setSelected(true);

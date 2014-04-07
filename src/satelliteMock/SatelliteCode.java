@@ -71,72 +71,45 @@ public class SatelliteCode {
 					}
 					if (tag == 'c'){
 						index = 0;
-						while (index < 18){
+						while (index < data.length - 2){
 							data[index] = data[index + 2];
 							index++;
 						}
-						data[index] = '\0';
-						index++;
-						data[index] = '\0';
-						index++;
 						if (strcmp(data, "photo") == 0){
 							delay(500);
 							//takePhoto();
 						}
 						else if (strcmp(data, "[o]") == 0){
-							/*char[] filename = new char[] { 'P', 'I', 'C', '0', '0', '0', '0', '.', 'J', 'P', 'G' };
-							strcpy(filename, );
-							int i = 0;
-							while (i < 10000){
-								filename[4] = (char) ('0' + i/10);
-								filename[5] = (char) ('0' + i%10);
-	            				// 	create if does not exist, do not open existing, write, sync after write
-								if (! SD.exists(filename)) {
-									break;
-								}
-								i++;
+							byte[] data = new byte[0];
+							while (Globals.RFAvailable('s') == 0) {
+								delay(5);
 							}
-							myFile = SD.open(filename, FILE_WRITE);
-							index = 0;
-							uint8_t buffer;
-							while (Globals.RFAvailable('s') == 0) {}
 							delay(1000);
-							while (Globals.RFAvailable('s') > 0){
-								while (Globals.RFAvailable('s') > 0){
-									buffer = Globals.ReadSerial('s');
-	              // 	Serial.write(buffer);
-									myFile.write(buffer);
+							while (Globals.RFAvailable('s') > 0) {
+								while (Globals.RFAvailable('s') > 0) {
+									data = Augment(data, Globals.ReadSerial('s'));
 									index++;
 								}
 								delay(2000);
 							}
-							myFile.close();
-							
 							sendSerial("r }");
 							delay(1200);
 							sendSerial("g {");
 							delay(1000);
-							myFile = SD.open(filename, FILE_READ);
-							sendSerial("g i ");
-							sendSerial(index);
+							sendSerial("g i " + index);
 							delay(1000);
-							index = 0;
-							myFile = SD.open(filename, FILE_READ);
-							if (myFile) {
-	            // 	read from the file until there's nothing else in it:
-								while (myFile.available()) {
-									index = 0;
-									while ((index < 60) && (myFile.available())){
-										Serial.write(myFile.read());
-										index++;
-									}
-									delay(1000);
+							int index = 0;
+							int x = 0;
+							while (x < data.length) {
+								index = 0;
+								while ((index < 60) && x < data.length) {
+									Globals.writeToSerial(data[x], 's');
+									index++;
+									x++;
 								}
-								myFile.close();
-								cam.begin();
-								cam.setImageSize(imageSize);
-								sendSerial("r {");
-							}*/
+								delay(1000);
+							}
+							sendSerial("r {");
 						}
 						else if (strcmp(data, "instructions") == 0){
 							instructions = "";
@@ -230,6 +203,7 @@ public class SatelliteCode {
 			}
 			catch (Exception e){
 				System.out.println("Error in Satellite Code");
+				e.printStackTrace();
 			}
 		}
 	}
@@ -346,5 +320,16 @@ public class SatelliteCode {
 		catch (Exception e){
 			return 1;
 		}
+	}
+	
+	private byte[] Augment(byte[] array, byte val){
+		byte[] out = new byte[array.length + 1];
+		int x = 0;
+		while (x < array.length){
+			out[x] = array[x];
+			x++;
+		}
+		out[x] = val;
+		return out;
 	}
 }

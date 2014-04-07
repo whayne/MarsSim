@@ -1,5 +1,10 @@
 package roverMock;
 
+import interfaceGUI.InterfaceForm;
+
+import java.awt.Toolkit;
+import java.io.InputStream;
+
 import objects.Globals;
 import objects.ThreadTimer;
 import simulatorWrapper.WrapperEvents;
@@ -144,7 +149,7 @@ public class RoverCode {
 							else if (strcmp(data, "photo") == 0) {
 								sendSerial("s r %");
 								delay(2000);
-								// takePicture();
+								takePicture();
 							} 
 							else if (strcmp(data, "instructions") == 0) {
 								instructions = "";
@@ -267,7 +272,7 @@ public class RoverCode {
 								moving = false;
 							} 
 							else if (cmd.equals("photo")) {
-								// takePicture();
+								takePicture();
 							}
 							else if (cmd.equals("delay1")) {
 								waiting = true;
@@ -397,6 +402,30 @@ public class RoverCode {
 		return speed;
 	}
 
+	private void takePicture() {
+		try {
+			sendSerial("s r }");
+			InputStream data = RoverCode.class.getResourceAsStream("/Rover Sample.jpg");
+			delay(2000);
+			sendSerial("s c [o]");
+			delay(2000);
+			int hold = data.read();
+			int index;
+			while (hold != -1) {
+				index = 0;
+				while (index < 60 && hold != -1) {
+					Globals.writeToSerial((byte) hold, 'r');
+					hold = data.read();
+					index++;
+				}
+				delay(2000);
+			}
+		}
+		catch (Exception e){
+			e.printStackTrace();
+		}
+	}
+	
 	public boolean sendSerial(String mess) {
 		char[] message = mess.toCharArray();
 		if (!mute) {

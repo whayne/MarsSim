@@ -23,10 +23,7 @@ import objects.ZDate;
 public class InterfaceCode {
 
 	static InterfaceForm GUI = new InterfaceForm();
-	OutputStream outputStream;
-    InputStream inputStream;
-    boolean outputBufferEmptyFlag = false;
-    ThreadTimer serialCheck;	
+	ThreadTimer serialCheck;	
     
     File dataFile;
     FileWriter LogFile;
@@ -839,59 +836,61 @@ public class InterfaceCode {
 		if (receivingFile){
 			GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Waiting for Image.\n");
 			try {
-				while (inputStream.available() <= 0) {}
-					delay(20);
-					GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Receiving Image.\n");
-					//writeToLog("Receiving Image");
-					String text = GUI.SerialDisplayLbl.getText();
-					byte[] bytes = new byte[length];
-					char[] progress = new char[length / 500 + 1];
-					int index = 0;
-					while (index < progress.length){
-						progress[index] = '-';
-						index++;
-					}
-					progress[0] = '>';
-					GUI.SerialDisplayLbl.setText(text + buildString(progress, 0, progress.length - 1));
-					index = 0;
-					int escape = 0;
-					while (index < length){
-						while(inputStream.available() > 0) {
-							escape = 0;
-							try {
-								bytes[index] = (byte) inputStream.read();
-							}
-							catch (ArrayIndexOutOfBoundsException e){
-								break;
-							}
-							if (index % 500 == 0 && index != 0){
-								progress[index / 500 - 1] = '-';
-								progress[index / 500] = '>';
-								GUI.SerialDisplayLbl.setText(text + buildString(progress, 0, progress.length - 1));
-							}
-							index++;
+				while (Globals.RFAvailable('g') == 0) {
+					delay(5);
+				}
+				delay(20);
+				GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Receiving Image.\n");
+				//writeToLog("Receiving Image");
+				String text = GUI.SerialDisplayLbl.getText();
+				byte[] bytes = new byte[length];
+				char[] progress = new char[length / 500 + 1];
+				int index = 0;
+				while (index < progress.length){
+					progress[index] = '-';
+					index++;
+				}
+				progress[0] = '>';
+				GUI.SerialDisplayLbl.setText(text + buildString(progress, 0, progress.length - 1));
+				index = 0;
+				//int escape = 0;
+				while (index < length){
+					while(Globals.RFAvailable('g') > 0) {
+						//escape = 0;
+						try {
+							bytes[index] = Globals.ReadSerial('g');
 						}
-						escape++;
-						if (escape > 1000000){
+						catch (ArrayIndexOutOfBoundsException e){
 							break;
 						}
+						if (index % 500 == 0 && index != 0){
+							progress[index / 500 - 1] = '-';
+							progress[index / 500] = '>';
+								GUI.SerialDisplayLbl.setText(text + buildString(progress, 0, progress.length - 1));
+						}
+						index++;
 					}
-					if (index == length){
-						File image = new File("");
-						image = new File(image.getAbsoluteFile() + "\\Photos\\IMAGE " + DateTime.toString("MMddhhmm") + ".jpg");
-						FileOutputStream fos = new FileOutputStream(image);
-						fos.write(bytes);
-						receivedFiles = Augment(receivedFiles, image.getAbsolutePath());
-						fos.close();
-						//writeToLog("Recieved Image.  Stored in: " + image.getAbsolutePath());
-						receivingFile = false;
-						GUI.SerialDisplayLbl.setText(text + "Done.\n");
-						GUI.MailBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Mail_Message.png")));
-					}
-					else {
-						GUI.SerialDisplayLbl.setText(text + "Image transfer failed, incomplete size requirement.\n");
-						//writeToLog("Image transfer failed due to incomplete size requirement.");
-					}
+					//escape++;
+					//if (escape > 1000000){
+					//	break;
+					//}
+				}
+				if (index == length){
+					File image = new File("");
+					image = new File(image.getAbsoluteFile() + "\\Photos\\IMAGE " + DateTime.toString("MMddhhmm") + ".jpg");
+					FileOutputStream fos = new FileOutputStream(image);
+					fos.write(bytes);
+					receivedFiles = Augment(receivedFiles, image.getAbsolutePath());
+					fos.close();
+					//writeToLog("Recieved Image.  Stored in: " + image.getAbsolutePath());
+					receivingFile = false;
+					GUI.SerialDisplayLbl.setText(text + "Done.\n");
+					GUI.MailBtn.setIcon(new ImageIcon(InterfaceForm.class.getResource("/Mail_Message.png")));
+				}
+				else {
+					GUI.SerialDisplayLbl.setText(text + "Image transfer failed, incomplete size requirement.\n");
+					//writeToLog("Image transfer failed due to incomplete size requirement.");
+				}
 			}	
 			catch(Exception exe) {
 				exe.printStackTrace();
@@ -903,7 +902,7 @@ public class InterfaceCode {
 		if (receivingFile){
 			GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Waiting for Data.\n");
 			try {
-				while (inputStream.available() <= 0) {}
+				while (Globals.RFAvailable('g') == 0) {}
 					delay(20);
 					GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Receiving Data.\n");
 					//writeToLog("Receiving Data File");
@@ -918,12 +917,12 @@ public class InterfaceCode {
 					progress[0] = '>';
 					GUI.SerialDisplayLbl.setText(text + buildString(progress, 0, progress.length - 1));
 					index = 0;
-					int escape = 0;
+					//int escape = 0;
 					while (index < length){
-						while(inputStream.available() > 0) {
-							escape = 0;
+						while(Globals.RFAvailable('g') > 0) {
+							//escape = 0;
 							try {
-								bytes[index] = (byte) inputStream.read();
+								bytes[index] = Globals.ReadSerial('g');
 							}
 							catch (ArrayIndexOutOfBoundsException e){
 								break;
@@ -935,10 +934,10 @@ public class InterfaceCode {
 							}
 							index++;
 						}
-						escape++;
-						if (escape > 1000000){
-							break;
-						}
+						//escape++;
+						//if (escape > 1000000){
+						//	break;
+						//}
 					}
 					if (index == length){
 						File image = new File("");
