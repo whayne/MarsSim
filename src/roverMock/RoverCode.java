@@ -87,7 +87,7 @@ public class RoverCode {
 						if (Globals.RFAvailable('r') > 0) {
 							data[0] = tag;
 							index++;
-							while (Globals.RFAvailable('r') > 0) {
+							while (Globals.RFAvailable('r') > 0 && index < 30) {
 								data[index] = (char) Globals.ReadSerial('r');
 								index++;
 							}
@@ -165,7 +165,7 @@ public class RoverCode {
 									delay(2000);
 								}
 								sendSerial("s r {");
-								delay(1000);
+								delay(1500);
 								sendSerial("s r n Instructions Transfered");
 								hasInstructions = true;
 								instructsComplete = 0;
@@ -411,12 +411,14 @@ public class RoverCode {
 			delay(2000);
 			int hold = data.read();
 			int index;
+			int x = 0;
 			while (hold != -1) {
 				index = 0;
 				while (index < 60 && hold != -1) {
 					Globals.writeToSerial((byte) hold, 'r');
 					hold = data.read();
 					index++;
+					x++;
 				}
 				delay(2000);
 			}

@@ -11,7 +11,7 @@ public class Globals {
 	
 	private static double timeScale = 1.0;
 	public static double startTimeMillis = System.currentTimeMillis();
-	
+		
 	public static void writeToSerial(char write, char from){
 		writeToSerial((byte)write, from);
 	}
