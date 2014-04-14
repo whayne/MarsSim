@@ -12,7 +12,6 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import objects.BackgroundImage;
-import objects.DecimalPoint;
 
 import java.awt.Toolkit;
 import javax.swing.JLabel;
@@ -280,7 +279,6 @@ public class MapFrame extends JFrame {
 	}
 	
 	public double getIncline(){
-		//TODO incline calculation
 		return 0;
 	}
 }
