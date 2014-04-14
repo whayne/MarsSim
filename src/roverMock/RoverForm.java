@@ -13,17 +13,12 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
 
 public class RoverForm extends JFrame {
 
 	static RoverForm frame;
 	private JPanel contentPane;
 	JTextArea SerialHistoryLbl;
-	private JTabbedPane tabbedPane;
-	private JPanel MovementPnl;
-	private JPanel TemperaturePnl;
-	private JPanel BatteryPnl;
 
 	/**
 	 * Launch the application.
@@ -60,27 +55,14 @@ public class RoverForm extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(new BorderLayout(0, 0));
 		
-		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		tabbedPane.setFont(new Font("Bookman Old Style", Font.PLAIN, 13));
-		contentPane.add(tabbedPane, BorderLayout.CENTER);
-		
 		JScrollPane scrollPane = new JScrollPane();
-		tabbedPane.addTab("Serial", null, scrollPane, null);
+		contentPane.add(scrollPane, BorderLayout.CENTER);
 		
 		SerialHistoryLbl = new JTextArea();
 		scrollPane.setViewportView(SerialHistoryLbl);
 		SerialHistoryLbl.setOpaque(false);
 		SerialHistoryLbl.setEditable(false);
 		SerialHistoryLbl.setFont(new Font("Bookman Old Style", Font.PLAIN, 13));
-		
-		MovementPnl = new JPanel();
-		tabbedPane.addTab("Movement", null, MovementPnl, null);
-		
-		TemperaturePnl = new JPanel();
-		tabbedPane.addTab("Temperature", null, TemperaturePnl, null);
-		
-		BatteryPnl = new JPanel();
-		tabbedPane.addTab("Battery", null, BatteryPnl, null);
 	}
 
 }
