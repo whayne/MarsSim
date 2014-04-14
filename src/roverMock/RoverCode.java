@@ -12,58 +12,40 @@ import simulatorWrapper.WrapperEvents;
 public class RoverCode {
 
 	static RoverForm GUI = new RoverForm();
-
+	private RoverDriveModel DriveModel = new RoverDriveModel();
+	
 	private int tries = 0;
 	private int imageSize;
-	// File imgFile;
-	// File myFile;
 	private char[] filename;
 	private boolean connection = false;
 	private boolean mute = false;
 	boolean moving = false;
-	String motorState = "";
+	private String motorState = "";
 
-	boolean hasInstructions = false;
-	String instructions = "";
-	int instructsComplete = 0;
-	long timeSinceCmd = 0;
-	boolean waiting = false;
-	long waitTime = 0;
+	private boolean hasInstructions = false;
+	private String instructions = "";
+	private int instructsComplete = 0;
+	private long timeSinceCmd = 0;
+	private boolean waiting = false;
+	private long waitTime = 0;
 
-	float boardVoltage = 9;
-	float motorVoltage = 12;
-	float armVoltage = 0;
-	float R1 = 10000.0f;
-	float R2 = 3300.0f;
-
-	int[] MotorPowers = new int[] { 150, 150, 150, 150 };
-	int[] MotorStates = new int[] { 0, 0, 0, 0 };
-	final int FORWARD = 1, BACKWARD = -1, RELEASE = 0;
-	double axel_width = 40;
-	double wheel_radius = 6;
-	int time_step = 100;
+	private float boardVoltage = 9;
+	private float motorVoltage = 12;
+	private float armVoltage = 0;
+	private float R1 = 10000.0f;
+	private float R2 = 3300.0f;
 
 	private char tag = '\0';
 	private char[] data = new char[20];
 	private int index = 0;
-	boolean go = true;
+	private boolean go = true;
 
+	
 	static void align() {
 		GUI = RoverForm.frame;
 	}
 
 	public void runCode() {
-		new ThreadTimer(0, new Runnable() {
-			public void run() {
-				driveRover();
-				try {
-					Thread.sleep(time_step);
-				} catch (Exception e) {
-					Thread.currentThread().interrupt();
-				}
-			}
-		}, ThreadTimer.FOREVER);
-
 		while (true) {
 			System.out.print(""); // Don't know why but fails without this.
 			try {
@@ -94,43 +76,43 @@ public class RoverCode {
 							data[index] = '\0';
 							if (strcmp(data, "move") == 0) {
 								sendSerial("s r %");
-								MotorStates[0] = FORWARD;
-								MotorStates[1] = FORWARD;
-								MotorStates[2] = FORWARD;
-								MotorStates[3] = FORWARD;
+								DriveModel.setMotorState(0, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(1, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(2, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(3, RoverDriveModel.FORWARD);
 								moving = true;
 								delay(1000); // For ir sensor testing
 							} 
 							else if (strcmp(data, "stop") == 0) {
 								sendSerial("s r %");
-								MotorStates[0] = RELEASE;
-								MotorStates[1] = RELEASE;
-								MotorStates[2] = RELEASE;
-								MotorStates[3] = RELEASE;
+								DriveModel.setMotorState(0, RoverDriveModel.RELEASE);
+								DriveModel.setMotorState(1, RoverDriveModel.RELEASE);
+								DriveModel.setMotorState(2, RoverDriveModel.RELEASE);
+								DriveModel.setMotorState(3, RoverDriveModel.RELEASE);
 								moving = true;
 							} 
 							else if (strcmp(data, "spin_ccw") == 0) {
 								sendSerial("s r %");
-								MotorStates[0] = BACKWARD;
-								MotorStates[1] = BACKWARD;
-								MotorStates[2] = FORWARD;
-								MotorStates[3] = FORWARD;
+								DriveModel.setMotorState(0, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(1, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(2, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(3, RoverDriveModel.FORWARD);
 								moving = true;
 							} 
 							else if (strcmp(data, "spin_cw") == 0) {
 								sendSerial("s r %");
-								MotorStates[0] = FORWARD;
-								MotorStates[1] = FORWARD;
-								MotorStates[2] = BACKWARD;
-								MotorStates[3] = BACKWARD;
+								DriveModel.setMotorState(0, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(1, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(2, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(3, RoverDriveModel.BACKWARD);
 								moving = true;
 							} 
 							else if (strcmp(data, "backward") == 0) {
 								sendSerial("s r %");
-								MotorStates[0] = BACKWARD;
-								MotorStates[1] = BACKWARD;
-								MotorStates[2] = BACKWARD;
-								MotorStates[3] = BACKWARD;
+								DriveModel.setMotorState(0, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(1, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(2, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(3, RoverDriveModel.BACKWARD);
 								moving = true;
 							} 
 							else if (strcmp(data, "getvolts") == 0) {
@@ -233,42 +215,42 @@ public class RoverCode {
 							}
 							// System.out.println(cmd + " - " + System.currentTimeMillis());
 							if (cmd.equals("move")) {
-								MotorStates[0] = FORWARD;
-								MotorStates[1] = FORWARD;
-								MotorStates[2] = FORWARD;
-								MotorStates[3] = FORWARD;
+								DriveModel.setMotorState(0, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(1, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(2, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(3, RoverDriveModel.FORWARD);
 								moving = true;
 								motorState = cmd;
 							} 
 							else if (cmd.equals("backward")) {
-								MotorStates[0] = BACKWARD;
-								MotorStates[1] = BACKWARD;
-								MotorStates[2] = BACKWARD;
-								MotorStates[3] = BACKWARD;
+								DriveModel.setMotorState(0, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(1, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(2, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(3, RoverDriveModel.BACKWARD);
 								moving = true;
 								motorState = cmd;
 							} 
 							else if (cmd.equals("spin_cw")) {
-								MotorStates[0] = FORWARD;
-								MotorStates[1] = FORWARD;
-								MotorStates[2] = BACKWARD;
-								MotorStates[3] = BACKWARD;
+								DriveModel.setMotorState(0, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(1, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(2, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(3, RoverDriveModel.BACKWARD);
 								moving = true;
 								motorState = cmd;
 							} 
 							else if (cmd.equals("spin_ccw")) {
-								MotorStates[0] = BACKWARD;
-								MotorStates[1] = BACKWARD;
-								MotorStates[2] = FORWARD;
-								MotorStates[3] = FORWARD;
+								DriveModel.setMotorState(0, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(1, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(2, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(3, RoverDriveModel.FORWARD);
 								moving = true;
 								motorState = cmd;
 							} 
 							else if (cmd.equals("stop")) {
-								MotorStates[0] = RELEASE;
-								MotorStates[1] = RELEASE;
-								MotorStates[2] = RELEASE;
-								MotorStates[3] = RELEASE;
+								DriveModel.setMotorState(0, RoverDriveModel.RELEASE);
+								DriveModel.setMotorState(1, RoverDriveModel.RELEASE);
+								DriveModel.setMotorState(2, RoverDriveModel.RELEASE);
+								DriveModel.setMotorState(3, RoverDriveModel.RELEASE);
 								moving = false;
 							} 
 							else if (cmd.equals("photo")) {
@@ -294,34 +276,34 @@ public class RoverCode {
 					else if (waiting){
 					   if (moving){
 					  	   if (motorState.equals("move")) {
-								MotorStates[0] = FORWARD;
-								MotorStates[1] = FORWARD;
-								MotorStates[2] = FORWARD;
-								MotorStates[3] = FORWARD;
+								DriveModel.setMotorState(0, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(1, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(2, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(3, RoverDriveModel.FORWARD);
 							} 
 							else if (motorState.equals("backward")) {
-								MotorStates[0] = BACKWARD;
-								MotorStates[1] = BACKWARD;
-								MotorStates[2] = BACKWARD;
-								MotorStates[3] = BACKWARD;
+								DriveModel.setMotorState(0, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(1, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(2, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(3, RoverDriveModel.BACKWARD);
 							} 
 							else if (motorState.equals("spin_cw")) {
-								MotorStates[0] = FORWARD;
-								MotorStates[1] = FORWARD;
-								MotorStates[2] = BACKWARD;
-								MotorStates[3] = BACKWARD;
+								DriveModel.setMotorState(0, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(1, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(2, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(3, RoverDriveModel.BACKWARD);
 							} 
 							else if (motorState.equals("spin_ccw")) {
-								MotorStates[0] = BACKWARD;
-								MotorStates[1] = BACKWARD;
-								MotorStates[2] = FORWARD;
-								MotorStates[3] = FORWARD;
+								DriveModel.setMotorState(0, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(1, RoverDriveModel.BACKWARD);
+								DriveModel.setMotorState(2, RoverDriveModel.FORWARD);
+								DriveModel.setMotorState(3, RoverDriveModel.FORWARD);
 							} 
 							else if (motorState.equals("stop")) {
-								MotorStates[0] = RELEASE;
-								MotorStates[1] = RELEASE;
-								MotorStates[2] = RELEASE;
-								MotorStates[3] = RELEASE;
+								DriveModel.setMotorState(0, RoverDriveModel.RELEASE);
+								DriveModel.setMotorState(1, RoverDriveModel.RELEASE);
+								DriveModel.setMotorState(2, RoverDriveModel.RELEASE);
+								DriveModel.setMotorState(3, RoverDriveModel.RELEASE);
 							} 
 					    }
 					}
@@ -348,44 +330,6 @@ public class RoverCode {
 				e.printStackTrace();
 			}
 		}
-	}
-
-	public void driveRover() {
-		double dist_left = 0;
-		double dist_right = 0;
-		if (Math.abs(adjustForIncline(
-				getMotorSpeed(MotorPowers[0] * MotorStates[0], motorVoltage), 0)) > Math
-				.abs(adjustForIncline(
-						getMotorSpeed(MotorPowers[1] * MotorStates[1],
-								motorVoltage), 0))) {
-			dist_left = adjustForIncline(
-					getMotorSpeed(MotorPowers[0] * MotorStates[0], motorVoltage),
-					0)
-					* wheel_radius * time_step / 1000.0;
-		} else {
-			dist_left = adjustForIncline(
-					getMotorSpeed(MotorPowers[1] * MotorStates[1], motorVoltage),
-					0)
-					* wheel_radius * time_step / 1000.0;
-		}
-		if (Math.abs(adjustForIncline(
-				getMotorSpeed(MotorPowers[2] * MotorStates[2], motorVoltage), 0)) > Math
-				.abs(adjustForIncline(
-						getMotorSpeed(MotorPowers[3] * MotorStates[3],
-								motorVoltage), 0))) {
-			dist_right = adjustForIncline(
-					getMotorSpeed(MotorPowers[2] * MotorStates[2], motorVoltage),
-					0)
-					* wheel_radius * time_step / 1000.0;
-		} else {
-			dist_right = adjustForIncline(
-					getMotorSpeed(MotorPowers[3] * MotorStates[3], motorVoltage),
-					0)
-					* wheel_radius * time_step / 1000.0;
-		}
-		double distance = (dist_left + dist_right) / 2.0;
-		double angle = Math.atan((dist_right - dist_left) / axel_width);
-		WrapperEvents.moveRover(distance, angle);
 	}
 
 	private double getMotorSpeed(int power, double bat_level) {

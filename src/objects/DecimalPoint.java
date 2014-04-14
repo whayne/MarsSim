@@ -1,4 +1,4 @@
-package simulatorWrapper;
+package objects;
 
 import java.awt.Point;
 

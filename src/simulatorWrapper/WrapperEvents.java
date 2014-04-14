@@ -1,5 +1,7 @@
 package simulatorWrapper;
 
+import objects.DecimalPoint;
+
 public class WrapperEvents {
 
 	static WrapperMain CODE = new WrapperMain();
@@ -32,6 +34,23 @@ public class WrapperEvents {
 	public static void moveRover(double distance, double angle){
 		CODE.MAP.setRoverDirection(CODE.MAP.getRoverDirection() + angle);
 		CODE.MAP.setRoverLocation(CODE.MAP.getRoverLocation().offset(distance*Math.cos(CODE.MAP.getRoverDirection()), distance*(Math.sin(CODE.MAP.getRoverDirection()))));
+	}
+	
+	public static DecimalPoint getRoverLocation(){
+		return CODE.MAP.getRoverLocation();
+	}
+	
+	public static double getRoverDirection(){
+		return CODE.MAP.getRoverDirection();
+	}
+	
+	public static void setRoverConditions(DecimalPoint location, double angle){
+		CODE.MAP.setRoverLocation(location);
+		CODE.MAP.setRoverDirection(angle);
+	}
+	
+	public static double getIncline(){
+		return CODE.MAP.getIncline();
 	}
 	
 }
