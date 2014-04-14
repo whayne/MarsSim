@@ -2,7 +2,6 @@ package satelliteMock;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.Scanner;
 
 import javax.swing.JFileChooser;
@@ -10,7 +9,6 @@ import javax.swing.JOptionPane;
 
 import objects.Globals;
 import objects.ThreadTimer;
-import roverMock.RoverCode;
 
 public class SatelliteCode {
 
@@ -59,7 +57,7 @@ public class SatelliteCode {
 						data[0] = 'r';
 						sendSerial(data);
 						delay(1000);
-						if (data[2] != '^' && data[2] != '}' && data[2] != '{'){
+						if (data[2] != '^'){
 							sendSerial("g #");
 						}
 					}
@@ -78,9 +76,8 @@ public class SatelliteCode {
 							index++;
 						}
 						if (strcmp(data, "photo") == 0){
-							sendSerial("g #");
-							delay(600);
-							takePhoto();
+							delay(500);
+							//takePhoto();
 						}
 						else if (strcmp(data, "[o]") == 0){
 							byte[] data = new byte[0];
@@ -88,7 +85,6 @@ public class SatelliteCode {
 								delay(5);
 							}
 							delay(1000);
-							int index = 0;
 							while (Globals.RFAvailable('s') > 0) {
 								while (Globals.RFAvailable('s') > 0) {
 									data = Augment(data, Globals.ReadSerial('s'));
@@ -102,7 +98,7 @@ public class SatelliteCode {
 							delay(1000);
 							sendSerial("g i " + index);
 							delay(1000);
-							index = 0;
+							int index = 0;
 							int x = 0;
 							while (x < data.length) {
 								index = 0;
@@ -190,7 +186,7 @@ public class SatelliteCode {
 						x++;
 					}
 					if (cmd.equals("photo")){
-						takePhoto();
+						// 	takePicture();
 					}
 					else if (cmd.equals("report")){
 						if (sendSerial("g n Sat Instructs Done")) {
@@ -212,33 +208,66 @@ public class SatelliteCode {
 		}
 	}
 		
-	void takePhoto(){
-	  try {
-		  sendSerial("r }");
-		  InputStream data = RoverCode.class.getResourceAsStream("/Satellite Sample.jpg");
-		  delay(2000);
-		  sendSerial("g i 12764"); //magic length
-		  delay(2000);
-		  int hold = data.read();
-		  int index;
-		  int x = 0;
-		  while (hold != -1) {
-			  index = 0;
-			  while (index < 60 && hold != -1) {
-				  Globals.writeToSerial((byte) hold, 's');
-				  hold = data.read();
-				  index++;
-				  x++;
-			  }  
-			  delay(1000);
-		  }
-		  delay(500);
-		  sendSerial("r {");
-		}
-		catch (Exception e){
-			e.printStackTrace();
-		}
-	}
+	/*void takePhoto(){
+	  sendSerial("r }");
+	  cam.setImageSize(imageSize);
+	  if (cam.takePicture()){
+	    filename = new char[13];
+	    strcpy(filename, "PIC0000.JPG");
+	    int i = 0;
+	    while (i < 100000){
+	      filename[5] = '0' + i/10;
+	      filename[6] = '0' + i%10;
+	      if (! SD.exists(filename)){
+	        break;
+	      }
+	      i++;
+	    }
+	        
+	    imgFile = SD.open(filename, FILE_WRITE);
+	    uint16_t jpglen = cam.frameLength();
+	    uint16_t length = jpglen;
+	    byte wCount = 0; // For counting # of writes
+	    while (jpglen > 0) {
+	      // read 32 bytes at a time;
+	      uint8_t* buffer;
+	      uint8_t bytesToRead = min(32, jpglen); // change 32 to 64 for a speedup but may not work with all setups!
+	      buffer = cam.readPicture(bytesToRead);
+	      imgFile.write(buffer, bytesToRead);
+	      wCount++;
+	      if(wCount >= 64) { // Every 2K, give a little feedback so it doesn't appear locked up
+	        wCount = 0;
+	      }
+	      jpglen -= bytesToRead;
+	   }
+	   imgFile.close();
+	            
+	   sendSerial("g i ");
+	   sendSerial(length);
+	   delay(1000);
+	   myFile = SD.open(filename, FILE_READ);
+	   if (myFile) {
+	      // read from the file until there's nothing else in it:
+	      while (myFile.available()) {
+	        index = 0;
+	        while ((index < 64) && (myFile.available())){
+	          Serial.write(myFile.read());
+	          index++;
+	        }
+	        delay(1000);
+	      }
+	      // close the file:
+	      myFile.close();
+	      cam.begin();
+	      cam.setImageSize(imageSize);
+	      sendSerial("r {");
+	    }
+	  }
+	  else {
+	    delay(1000);
+	    sendSerial("g n Picture failed to take.");
+	  }
+	}*/
 	
 	private void delay(int length){
 		try {
@@ -265,7 +294,7 @@ public class SatelliteCode {
 			} catch (InterruptedException e) {}
 			x++;
 		}
-		GUI.SerialHistoryLbl.setText(GUI.SerialHistoryLbl.getText() + print + "\t\t\t" + (System.currentTimeMillis()-Globals.startTimeMillis) + "\n");
+		GUI.SerialHistoryLbl.setText(GUI.SerialHistoryLbl.getText() + print + "\t\t" + (System.currentTimeMillis()-Globals.startTimeMillis) + "\n");
 		return true;
 	}
 

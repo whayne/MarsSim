@@ -55,7 +55,7 @@ public class InterfaceForm extends JFrame {
 		JLabel StatusArmPowerLbl;
 		JProgressBar StatusArmPower;
 	JPanel RoverBtnsPnl;
-		ImageButton[] RoverBtns = new ImageButton[10];
+		ImageButton[] RoverBtns = new ImageButton[15];
 		JLabel RoverSendLbl;
 		JTextField RoverSendTxt;
 		JButton RoverSendBtn;
@@ -131,7 +131,7 @@ public class InterfaceForm extends JFrame {
 				InterfaceEvents.CODE.resetConnection();
 			}
 		});
-		setIconImage(Toolkit.getDefaultToolkit().getImage(InterfaceForm.class.getResource("/Dish.png")));
+		setIconImage(Toolkit.getDefaultToolkit().getImage(InterfaceForm.class.getResource("/Satelite.png")));
 		setTitle("Rover Control");
 		initalize();
 	}

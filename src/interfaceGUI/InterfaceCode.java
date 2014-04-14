@@ -477,7 +477,7 @@ public class InterfaceCode {
 	public void sendRoverCommand(){
 		if (!GUI.RoverSendTxt.getText().equals("")){
 			if (!Connected){
-				GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "You are not Connected.\n");
+				GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "\nYou are not Connected.");
 			}
 			writeToSerial("s g " + GUI.RoverSendTxt.getText());
             GUI.SerialDisplayLbl.setText(GUI.SerialDisplayLbl.getText() + "Sent: \"" + GUI.RoverSendTxt.getText() + "\"\n");
@@ -501,11 +501,7 @@ public class InterfaceCode {
 			GUI.RoverSendTxt.setText("");
 		}
 		else {
-			new ThreadTimer(0, new Runnable(){
-				public void run(){
-					(new PopUp()).showConfirmDialog("You must enter a message into the field.", "Message Failed", PopUp.DEFAULT_OPTIONS);
-				}
-			}, 1);
+			(new PopUp()).showConfirmDialog("You must enter a message into the field.", "Message Failed", PopUp.DEFAULT_OPTIONS);
 		}
 	}
 	
@@ -525,11 +521,7 @@ public class InterfaceCode {
 			GUI.SatSendTxt.setText("");
 		}
 		else {
-			new ThreadTimer(0, new Runnable(){
-				public void run(){
-					(new PopUp()).showConfirmDialog("You must enter a message into the field.", "Message Failed", PopUp.DEFAULT_OPTIONS);
-				}
-			}, 1);
+			(new PopUp()).showConfirmDialog("You must enter a message into the field.", "Message Failed", PopUp.DEFAULT_OPTIONS);
 		}
 	}
 	
@@ -861,28 +853,23 @@ public class InterfaceCode {
 				progress[0] = '>';
 				GUI.SerialDisplayLbl.setText(text + buildString(progress, 0, progress.length - 1));
 				index = 0;
-				int i = 0;
 				//int escape = 0;
-				while (index < length && Globals.RFAvailable('g') > 0){
-					i = 0;
-					while (i < 60 && index < length){
+				while (index < length){
+					while(Globals.RFAvailable('g') > 0) {
 						//escape = 0;
 						try {
 							bytes[index] = Globals.ReadSerial('g');
 						}
 						catch (ArrayIndexOutOfBoundsException e){
-							e.printStackTrace();
 							break;
 						}
 						if (index % 500 == 0 && index != 0){
 							progress[index / 500 - 1] = '-';
 							progress[index / 500] = '>';
-							GUI.SerialDisplayLbl.setText(text + buildString(progress, 0, progress.length - 1));
+								GUI.SerialDisplayLbl.setText(text + buildString(progress, 0, progress.length - 1));
 						}
 						index++;
-						i++;
 					}
-					delay(1000);
 					//escape++;
 					//if (escape > 1000000){
 					//	break;
@@ -890,7 +877,7 @@ public class InterfaceCode {
 				}
 				if (index == length){
 					File image = new File("");
-					image = new File(image.getAbsoluteFile() + "\\Photos\\IMAGE " + DateTime.toString("MM-dd hh-mm") + ".jpg");
+					image = new File(image.getAbsoluteFile() + "\\Photos\\IMAGE " + DateTime.toString("MMddhhmm") + ".jpg");
 					FileOutputStream fos = new FileOutputStream(image);
 					fos.write(bytes);
 					receivedFiles = Augment(receivedFiles, image.getAbsolutePath());
@@ -954,7 +941,7 @@ public class InterfaceCode {
 					}
 					if (index == length){
 						File image = new File("");
-						image = new File(image.getAbsoluteFile() + "\\Data\\DATA " + DateTime.toString("MM-dd hh-mm") + ".CSV");
+						image = new File(image.getAbsoluteFile() + "\\Data\\DATA " + DateTime.toString("MMddhhmm") + ".CSV");
 						FileOutputStream fos = new FileOutputStream(image);
 						fos.write(bytes);
 						receivedFiles = Augment(receivedFiles, image.getAbsolutePath());
